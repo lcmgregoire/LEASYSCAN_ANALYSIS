@@ -1,0 +1,13 @@
+"0","```r
+library(ggplot)
+GENOTYPE5<-as.character(ET_ETMOY5$GENOTYPE)
+GENO5<-as.fac(ET_ETMOY5$GENO)
+ET5<-as.numeric(ET_ETMOY5$ET)
+ETMOY5<-as.numeric(ET_ETMOY5$ETMOY)
+
+ggplot(data = ET_ETMOY5, aes(x=ETMOY5, y=ET5, shape=GENO5))+
+  geom_point()+
+  geom_smooth(method=lm,se=FALSE, fill=NA)
+  geom.abline(intercept=0)
+  
+```"

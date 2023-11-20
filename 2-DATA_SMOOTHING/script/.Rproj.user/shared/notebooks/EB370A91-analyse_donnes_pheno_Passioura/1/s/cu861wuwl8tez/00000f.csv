@@ -1,0 +1,5 @@
+"0","#Error in setwd(dir = ""C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_WS_2013_2015"") : 
+ # cannot change working directory  ###https://www.programmingr.com/r-error-messages/cannot-change-working-directory/
+setwd(dir = ""~/"")  ##revient aux documents
+"
+"2","Avis : The working directory was changed to C:/Users/2021lg003/Documents inside a notebook chunk. The working directory will be reset when the chunk is finished running. Use the knitr root.dir option in the setup chunk to change the working directory for notebook chunks."

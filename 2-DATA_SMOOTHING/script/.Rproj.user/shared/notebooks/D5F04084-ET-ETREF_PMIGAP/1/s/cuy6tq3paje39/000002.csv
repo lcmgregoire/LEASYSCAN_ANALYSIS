@@ -1,0 +1,19 @@
+"0","```r
+##Fit model
+mod5<-lm(ET5~ETMOY5*GENO5, data = ET_ETMOY5)
+summary(mod5)
+coef5<-mod5$coefficients
+write.csv(coef5, file=\"estimatesET_ETMOY5.csv\")
+
+
+mod5_intercept0<-lm(ET5~0 + ETMOY5*GENO5, data = ET_ETMOY5)
+summary(mod5_intercept0)
+coef5BIS<-mod5_intercept0$coefficients
+write.csv(coef5BIS, file=\"estimatesET_ETMOY5BIS.csv\")
+
+
+mod5_ter<-lm(ET5~0 + ETMOY5*GENO5,offset = rep(0,length(ET5)))
+summary(mod5_ter)
+coef5TER<-mod5_ter$coefficients
+write.csv(coef5TER, file=\"estimatesET_ETMOY5TER.csv\")
+```"

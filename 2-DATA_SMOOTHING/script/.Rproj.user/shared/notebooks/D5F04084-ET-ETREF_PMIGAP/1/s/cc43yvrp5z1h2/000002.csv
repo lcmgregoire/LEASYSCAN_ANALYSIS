@@ -1,0 +1,13 @@
+"0","```r
+ggplot(data = ET_ETMOY, aes(x=ETMOY, y=ET, shape=GENOTYPE))+
+  geom_point()+
+  geom_smooth(method=lm,se=FALSE, fill=NA)+
+  geom_abline(intercept = (0))
+
+```"
+"1","`geom_smooth()` using formula 'y ~ x'
+Warning: The shape palette can deal with a maximum of 6 discrete values because more than 6
+becomes difficult to discriminate; you have 232. Consider specifying shapes manually
+if you must have them.
+Warning: Removed 1355 rows containing missing values (geom_point).
+"

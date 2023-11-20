@@ -1,0 +1,5 @@
+"0","## chemin "
+"0","setwd(dir =""C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_WS_2013_2015"")"
+"2","Error in setwd(dir = ""C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_WS_2013_2015"") : 
+  cannot change working directory
+"

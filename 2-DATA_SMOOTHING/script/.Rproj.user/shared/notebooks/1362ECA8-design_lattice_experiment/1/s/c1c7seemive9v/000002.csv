@@ -1,0 +1,6 @@
+"0","```r
+design <- design.ab(trt, r, serie = 0, design=\"rcbd\", randomization = TRUE) # serie = 0 gives sequence 
+
+```"
+"1","Error in 1:b : NA/NaN argument
+"

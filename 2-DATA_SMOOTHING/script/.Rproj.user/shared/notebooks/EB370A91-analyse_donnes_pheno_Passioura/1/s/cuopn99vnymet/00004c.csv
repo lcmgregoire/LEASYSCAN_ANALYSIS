@@ -1,0 +1,1 @@
+"0","ggscatter(data = data2012, x='WU', y='HI', add = ""reg.line"", conf.int = TRUE, cor.coef = TRUE, cor.method = ""pearson"", xlab = ""WU 2012"", ylab = ""HI 2012"")"

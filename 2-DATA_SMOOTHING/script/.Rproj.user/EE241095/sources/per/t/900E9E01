@@ -1,0 +1,26 @@
+{
+    "id": "900E9E01",
+    "path": "~/Manip_loadcells/Lissage_Manip_BenoitClerget_092022/EZTr_main.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "2667498057",
+    "contents": "",
+    "dirty": false,
+    "created": 1665412526338.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "194,186",
+        "scrollLine": "184"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1665388542,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1665388542,
+    "read_only": false,
+    "read_only_alternatives": []
+}

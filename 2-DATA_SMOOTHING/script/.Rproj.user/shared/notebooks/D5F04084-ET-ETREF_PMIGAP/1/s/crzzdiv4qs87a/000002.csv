@@ -1,0 +1,18 @@
+"0","```r
+GENOTYPE2<-as.character(ET_ETMOY2$GENOTYPE)
+GENO2<-as.factor(ET_ETMOY2$GENO)
+ET2<-as.numeric(ET_ETMOY2$ET)
+ETMOY2<-as.numeric(ET_ETMOY2$ETMOY)
+library(ggplot2)
+
+
+ggplot(data = ET_ETMOY2, aes(ETMOY2,ET2, shape=GENO2))+
+  geom_point()+
+  geom_smooth(method = lm, se=FALSE,fill=NA)
+
+```"
+"1","`geom_smooth()` using formula 'y ~ x'
+Warning: The shape palette can deal with a maximum of 6 discrete values because more than 6 becomes
+difficult to discriminate; you have 49. Consider specifying shapes manually if you must have them.
+Warning: Removed 258 rows containing missing values (geom_point).
+"

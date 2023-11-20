@@ -1,0 +1,28 @@
+{
+    "id": "F9B92193",
+    "path": "C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_2013_2015/analyse_donnes_pheno_Passioura.Rmd",
+    "project_path": null,
+    "type": "r_markdown",
+    "hash": "2033989341",
+    "contents": "",
+    "dirty": false,
+    "created": 1677658269068.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "tempName": "Untitled1",
+        "chunk_output_type": "inline",
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "362,1",
+        "scrollLine": "264"
+    },
+    "folds": "17|18|51|0|\n73|6|119|0|\n122|33|149|0|\n152|6|169|0|\n172|23|212|0|\n214|6|218|0|\n266|26|292|0|\n295|30|321|0|\n324|30|351|0|\n",
+    "lastKnownWriteTime": 1677923686,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1677923686677,
+    "read_only": false,
+    "read_only_alternatives": []
+}

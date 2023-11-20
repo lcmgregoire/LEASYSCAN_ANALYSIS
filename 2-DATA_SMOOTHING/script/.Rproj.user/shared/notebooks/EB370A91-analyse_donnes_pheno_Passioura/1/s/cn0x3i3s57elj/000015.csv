@@ -1,0 +1,5 @@
+"0","##2012
+desc_data2013_WW<-stat.desc(data2013_WS, norm=TRUE) ### NE MARCHE PAS : Error in shapiro.test(x) : toutes les valeurs de 'x' sont identiques
+"
+"2","Error in shapiro.test(x) : toutes les valeurs de 'x' sont identiques
+"

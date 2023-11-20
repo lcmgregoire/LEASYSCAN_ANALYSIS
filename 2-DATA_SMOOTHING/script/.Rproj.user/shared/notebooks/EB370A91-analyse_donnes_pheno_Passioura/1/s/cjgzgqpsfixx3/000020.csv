@@ -1,0 +1,11 @@
+"0","
+png(filename = ""./2013_WS/HISTO_YIELD.png"")
+hist(data2013_WS$YIELD,main=""YIELD 2013_WS"",xlab=""YIELD"")
+dev.off()
+"
+"1","null device "
+"1","
+"
+"1","          1 "
+"1","
+"

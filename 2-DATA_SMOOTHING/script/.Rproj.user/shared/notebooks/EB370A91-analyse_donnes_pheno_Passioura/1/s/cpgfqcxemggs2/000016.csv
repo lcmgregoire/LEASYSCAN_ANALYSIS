@@ -1,0 +1,15 @@
+"0","
+# visualisation correlation
+pdf(file = ""CORRELATION_TE_HI_WU_2013_WW.pdf"")
+ggscatter(data = data2013_WW, x='TE', y='WU', add = ""reg.line"", conf.int = TRUE, cor.coef = TRUE, cor.method = ""pearson"", xlab = ""TE 2013_WW"", ylab = ""WU 2013_WW"")
+ggscatter(data = data2013_WW, x='TE', y='HI', add = ""reg.line"", conf.int = TRUE, cor.coef = TRUE, cor.method = ""pearson"", xlab = ""TE 2013_WW"", ylab = ""HI 2013_WW"")
+ggscatter(data = data2013_WW, x='WU', y='HI', add = ""reg.line"", conf.int = TRUE, cor.coef = TRUE, cor.method = ""pearson"", xlab = ""WU 2013_WW"", ylab = ""HI 2013_WW"")
+dev.off()
+"
+"1","null device "
+"1","
+"
+"1","          1 "
+"1","
+"
+"0","png(file = ""CORRELATION_TE_WU_2013_WW.png"")"

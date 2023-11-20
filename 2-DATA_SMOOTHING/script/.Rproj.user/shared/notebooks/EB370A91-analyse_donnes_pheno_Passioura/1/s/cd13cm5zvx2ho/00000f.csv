@@ -1,0 +1,4 @@
+"0","####definition des var
+data2012$T1_50_FL<-as.integer(data2012$T1_50_FL)
+"
+"2","Avis : NAs introduced by coercion"

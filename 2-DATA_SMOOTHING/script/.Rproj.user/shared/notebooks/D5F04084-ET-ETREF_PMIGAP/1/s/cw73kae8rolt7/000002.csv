@@ -1,0 +1,12 @@
+"0","```r
+
+GENOTYPE4<-as.character(ET_ETMOY4$GENOTYPE)
+GENO4<-as.character(ET_ETMOY4$GENO)
+ET4<-as.numeric(ET_ETMOY4$ET)
+ETMOY4<-as.numeric(ET_ETMOY4$ETMOY)
+library(ggplot2)
+ggplot(data = ET_ETMOY4, aes(x=ETMOY4, y=ET4, shape=GENO4))+
+  geom_point()+
+  geom_smooth(method=lm,se=FALSE, fill=NA)+
+  geom_abline(intercept=0)
+```"

@@ -1,0 +1,24 @@
+"0","```r
+
+ET_ETMOY5<-read.csv2(\"~/Pearl millet panel PMIGAP/ET_ETMOY5.csv\", sep = \";\", dec = \",\", header = TRUE)
+summary(ET_ETMOY5)
+
+```"
+"1","   GENOTYPE              GENO             ET            ETMOY           SUM.TR     
+ Length:228         Min.   :201.0   Min.   :0.770   Min.   :3.950   Min.   :12436  
+ Class :character   1st Qu.:210.0   1st Qu.:3.575   1st Qu.:4.050   1st Qu.:20656  
+ Mode  :character   Median :219.5   Median :4.345   Median :4.305   Median :24554  
+                    Mean   :219.5   Mean   :4.563   Mean   :4.835   Mean   :23941  
+                    3rd Qu.:229.0   3rd Qu.:5.765   3rd Qu.:6.080   3rd Qu.:27736  
+                    Max.   :238.0   Max.   :9.160   Max.   :6.320   Max.   :30620  
+     Tot.DW            TE       
+ Min.   :37.60   Min.   :2.010  
+ 1st Qu.:58.40   1st Qu.:2.590  
+ Median :67.15   Median :2.745  
+ Mean   :67.66   Mean   :2.856  
+ 3rd Qu.:79.00   3rd Qu.:3.120  
+ Max.   :93.90   Max.   :3.830  
+"
+"0","```r
+ET_ETMOY5<-na.omit(ET_ETMOY5)
+```"

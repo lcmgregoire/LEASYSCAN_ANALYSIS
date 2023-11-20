@@ -1,0 +1,369 @@
+---
+title: "Analyse data pheno PMIGAP"
+output: html_notebook
+---
+
+```{r}
+## chemin 
+setwd(dir ="C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_WS_2013_2015")
+rm(list = ls())
+   
+###objectif : analyse données pheno PMIGAP correlation des composants de l'equation de Passioura
+## etapes 
+#1) Importer les données, charger les packages, definition des variables
+#2)##histo distribution variables
+```
+
+
+```{r IMPORT DATA}
+##import data
+## DATASET COMMUN 2012, 2013 WW, 2013 WS, 2015 INBRED & HYBRID
+data<-read.csv2("C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_2013_2015/DATASET_PMIGAP_COMMUN_2012_2013_2015.csv", dec = "." )
+data2012<-read.csv2("C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_2013_2015/DATA_2012.csv", dec = "." )
+data2013_WS<-read.csv2("C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_2013_2015/DATA_2013_WS.csv", dec = "." )
+
+
+
+
+
+data2013_WW<-read.csv2("C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_2013_2015/DATA_2013_WW.csv", dec = "." )
+
+data2015_HYBRID<-read.csv2("C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_2013_2015/DATA_2015_HYBRID.csv", dec = "." )
+data2015_INBRED<-read.csv2("C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_2013_2015/DATA_2015_INBRED.csv", dec = "." )
+
+
+
+##packages
+
+library('pastecs')
+library(tidyverse)
+library(ggplot2)
+library('car')
+library(multcomp)
+library(car)
+library("Rmisc") 
+library(boot)
+library("ggpubr")
+library("dplyr")
+
+####definition des var
+data2012$T1_50_FL<-as.integer(data2012$T1_50_FL)
+
+```
+
+```{r}
+###descritpion des variables TOUTES ANNES
+desc_data<-stat.desc(data, norm=TRUE)
+write.table(desc_data, file = "desc_data2012_2013_2015.csv")
+
+
+##2012
+desc_data2012<-stat.desc(data2012, norm=TRUE) ### NE MARCHE PAS : Error in shapiro.test(x) : toutes les valeurs de 'x' sont identiques
+write.table(desc_data, file = "desc_data2012.csv")
+
+
+
+##2012
+desc_data2013_WW<-stat.desc(data2013_WS, norm=TRUE) ### NE MARCHE PAS : Error in shapiro.test(x) : toutes les valeurs de 'x' sont identiques
+write.table(desc_data, file = "desc_data2013_WW.csv")
+```
+```{r}
+
+```
+
+```{r}
+##histo distribution var 
+
+
+###2012
+png(filename = "./2012/HISTO_TE.png")
+hist(data2012$TE,main="TE 2012",xlab="TE (g/kg)")
+dev.off()
+
+png(filename = "./2012/HISTO_HI.png")
+hist(data2012$HI,main="HI 2012",xlab="HI")
+dev.off()
+
+png(filename = "./2012/HISTO_WU.png")
+hist(data2012$WU,main="WATER USED 2012",xlab="WU")
+dev.off()
+
+png(filename = "./2012/HISTO_YIELD.png")
+hist(data2012$YIELD,main="YIELD 2012",xlab="YIELD")
+dev.off()
+
+
+###2013 WS
+png(filename = "./2013_WS/HISTO_TE.png")
+hist(data2013_WS$TE,main="TE 2013_WS",xlab="TE (g/kg)")
+dev.off()
+
+png(filename = "./2013_WS/HISTO_HI.png")
+hist(data2013_WS$HI,main="HI 2013_WS",xlab="HI")
+dev.off()
+
+png(filename = "./2013_WS/HISTO_WU.png")
+hist(data2013_WS$WU,main="WATER USED 2013_WS",xlab="WU")
+dev.off()
+
+png(filename = "./2013_WS/HISTO_YIELD.png")
+hist(data2013_WS$YIELD,main="YIELD 2013_WS",xlab="YIELD")
+dev.off()
+
+
+#
+
+#ist(data$TE,main="TE 2012 2013 2015 ",xlab="TE (g/kg)")
+#hist(data$HI,main="HI 2012 2013 2015 ",xlab="HI")
+#hist(data$WATER_EXTRACTED,main="WATER USED 2012 2013 2015 ",xlab="WU")
+
+```
+
+
+```{r CORRELATION TOUTES ANNEES }
+############## correlation sur les données brutes toutes annees confondues entre TE WU ET HI
+corTE_WU<-cor(data$WATER_EXTRACTED, data$TE, use = "complete.obs")
+corTE_WU
+corTE_HI<-cor(data$HI, data$TE, use = "complete.obs")
+corTE_HI
+corWU_HI<-cor(data$HI, data$WATER_EXTRACTED, use = "complete.obs")
+corWU_HI
+
+# visualisation correlation
+pdf(file = "CORRELATION_TE_HI_WU_2012_2013_2015.pdf")
+ggscatter(data = data, x='TE', y='WATER_EXTRACTED', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2012 2013 2015", ylab = "WU 2012 2013 2015 ")
+ggscatter(data = data, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2012 2013 2015", ylab = "HI 2012 2013 2015")
+ggscatter(data = data, x='WATER_EXTRACTED', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2012 2013 2015", ylab = "HI 2012 2013 2015")
+dev.off()
+
+png(file = "CORRELTION_TE_WU_2012_2013_2015.png")
+ggscatter(data = data, x='TE', y='WATER_EXTRACTED', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2012 2013 2015", ylab = "WU 2012 2013 2015 ")
+dev.off()
+png(file = "CORRELTION_TE_HI_2012_2013_2015.png")
+ggscatter(data = data, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2012 2013 2015", ylab = "HI 2012 2013 2015")
+dev.off()
+png(file = "CORRELTION_HI_WU_2012_2013_2015.png")
+ggscatter(data = data, x='WATER_EXTRACTED', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2012 2013 2015", ylab = "HI 2012 2013 2015")
+dev.off()
+
+
+```
+
+
+```{r}
+###anova
+lmTE_data_2012_2013_year<-lm(mean_2012_2013_year$TE~mean_2012_2013_year$YEAR)
+Anova(lmTE_data_2012_2013_year)
+
+lmTE_WU<-lm(data$WATER_EXTRACTED~data$TE)
+Anova(lmTE_WU)
+
+
+lmTE_HI<-lm(data$HI~data$TE)
+Anova(lmTE_HI)
+
+
+lmWU_HI<-lm(data$WATER_EXTRACTED~data$HI)
+Anova(lmWU_HI)
+
+
+```
+
+
+```{r CORRELATION 2012}
+############## correlation sur les données brutes 2012 entre TE WU  HI ET YIELD
+
+# visualisation correlation
+pdf(file = "./2012/CORRELATION_TE_HI_WU_2012.pdf")
+ggscatter(data = data2012, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2012", ylab = "WU 2012")
+ggscatter(data = data2012, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2012", ylab = "HI 2012")
+ggscatter(data = data2012, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2012", ylab = "HI 2012")
+dev.off()
+
+
+png(file = "./2012/CORRELATION_TE_WU_2012.png")
+ggscatter(data = data2012, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2012", ylab = "WU 2012")
+dev.off()
+png(file = "./2012/CORRELATION_TE_HI_2012.png")
+ggscatter(data = data2012, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2012", ylab = "HI 2012")
+dev.off()
+png(file = "./2012/CORRELATION_HI_WU_2012.png")
+ggscatter(data = data2012, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2012", ylab = "HI 2012")
+dev.off()
+
+####matrice de correlation tuto  avec les donnes mtcars  via ce lien http://www.sthda.com/french/wiki/matrice-de-correlation-avec-r-analyse-et-visualisation
+
+df_cor2012<-data.frame(
+  TE2012=data2012$TE,
+  WU2012=data2012$WU,
+  HI2012=data2012$HI,
+  YIELD2012=data2012$YIELD
+  )
+    
+cor2012<-cor(df_cor2012)
+plot_cor2012<-corrplot(cor2012, type="upper", order="hclust", tl.col="black", tl.srt=45)                       
+                         
+                        
+##save output
+write.csv2(cor2012, file = "./2012/correlation2012.csv")
+png(file = "./2012/correlation2012.png")
+plot_cor2012<-corrplot(cor2012, type="upper", order="hclust", tl.col="black", tl.srt=45)                       
+dev.off()
+
+```
+
+```{r}
+
+ head(mtcars)
+mcor <- cor(mtcars)
+```
+
+```{r CORRELATION 2013 WS}
+
+############## correlation sur les données brutes 2013_WS entre TE WU  HI ET YIELD
+
+# visualisation correlation
+pdf(file = "./2013_WS/CORRELATION_TE_HI_WU_2013_WS.pdf")
+ggscatter(data = data2013_WS, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2013_WS", ylab = "WU 2013_WS")
+ggscatter(data = data2013_WS, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2013_WS", ylab = "HI 2013_WS")
+ggscatter(data = data2013_WS, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2013_WS", ylab = "HI 2013_WS")
+ggscatter(data = data2013_WS, x='WU', y='d = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2013_WS", ylab = "HI 2013_WS")
+dev.off()
+
+
+png(file = "./2013_WS/CORRELATION_TE_WU_2013_WS.png")
+ggscatter(data = data2013_WS, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2013_WS", ylab = "WU 2013_WS")
+dev.off()
+png(file = "./2013_WS/CORRELATION_TE_HI_2013_WS.png")
+ggscatter(data = data2013_WS, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2013_WS", ylab = "HI 2013_WS")
+dev.off()
+png(file = "./2013_WS/CORRELATION_HI_WU_2013_WS.png")
+ggscatter(data = data2013_WS, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2013_WS", ylab = "HI 2013_WS")
+dev.off()
+
+####matrice de correlation tuto  avec les donnes mtcars  via ce lien http://www.sthda.com/french/wiki/matrice-de-correlation-avec-r-analyse-et-visualisation
+
+df_cor2013_WS<-data.frame(
+  TE2013_WS=data2013_WS$TE,
+  WU2013_WS=data2013_WS$WU,
+  HI2013_WS=data2013_WS$HI,
+  YIELD2013_WS=data2013_WS$YIELD
+  )
+    
+cor2013_WS<-cor(df_cor2013_WS)
+plot_cor2013_WS<-corrplot(cor2013_WS, type="upper", order="hclust", tl.col="black", tl.srt=45)                       
+                         
+                        
+##save output
+write.csv2(cor2013_WS, file = "./2013_WS/correlation2013_WS.csv")
+png(file = "./2013_WS/correlation2013_WS.png")
+plot_cor2013_WS<-corrplot(cor2013_WS, type="upper", order="hclust", tl.col="black", tl.srt=45)                       
+dev.off()
+
+
+```
+
+
+```{r CORRELATION 2013 WW}
+############## correlation sur les données brutes 2013_WW entre TE WU ET HI
+corTE_WU_2013_WW<-cor(data2013_WW$WU, data2013_WW$TE, use = "complete.obs")
+corTE_WU_2013_WW
+corTE_HI_2013_WW<-cor(data2013_WW$HI, data2013_WW$TE, use = "complete.obs")
+corTE_HI_2013_WW
+corWU_HI_2013_WW<-cor(data2013_WW$HI, data2013_WW$WU, use = "complete.obs")
+corWU_HI_2013_WW
+
+# visualisation correlation
+pdf(file = "CORRELATION_TE_HI_WU_2013_WW.pdf")
+ggscatter(data = data2013_WW, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2013_WW", ylab = "WU 2013_WW")
+ggscatter(data = data2013_WW, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2013_WW", ylab = "HI 2013_WW")
+ggscatter(data = data2013_WW, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2013_WW", ylab = "HI 2013_WW")
+dev.off()
+
+
+png(file = "CORRELATION_TE_WU_2013_WW.png")
+ggscatter(data = data2013_WW, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2013_WW", ylab = "WU 2013_WW")
+dev.off()
+png(file = "CORRELATION_TE_HI_2013_WW.png")
+ggscatter(data = data2013_WW, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2013_WW", ylab = "HI 2013_WW")
+dev.off()
+png(file = "CORRELATION_HI_WU_2013_WW.png")
+ggscatter(data = data2013_WW, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2013_WW", ylab = "HI 2013_WW")
+dev.off()
+```
+
+
+```{r CORRELATION 2015 HYBRID}
+############## correlation sur les données brutes 2015_HYBRID entre TE WU ET HI
+corTE_WU_2015_HYBRID<-cor(data2015_HYBRID$WU, data2015_HYBRID$TE, use = "complete.obs")
+corTE_WU_2015_HYBRID
+corTE_HI_2015_HYBRID<-cor(data2015_HYBRID$HI, data2015_HYBRID$TE, use = "complete.obs")
+corTE_HI_2015_HYBRID
+corWU_HI_2015_HYBRID<-cor(data2015_HYBRID$HI, data2015_HYBRID$WU, use = "complete.obs")
+corWU_HI_2015_HYBRID
+
+# visualisation correlation
+pdf(file = "CORRELATION_TE_HI_WU_2015_HYBRID.pdf")
+ggscatter(data = data2015_HYBRID, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2015_HYBRID", ylab = "WU 2015_HYBRID")
+ggscatter(data = data2015_HYBRID, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2015_HYBRID", ylab = "HI 2015_HYBRID")
+ggscatter(data = data2015_HYBRID, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2015_HYBRID", ylab = "HI 2015_HYBRID")
+dev.off()
+
+
+png(file = "CORRELATION_TE_WU_2015_HYBRID.png")
+ggscatter(data = data2015_HYBRID, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2015_HYBRID", ylab = "WU 2015_HYBRID")
+dev.off()
+png(file = "CORRELATION_TE_HI_2015_HYBRID.png")
+ggscatter(data = data2015_HYBRID, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2015_HYBRID", ylab = "HI 2015_HYBRID")
+dev.off()
+png(file = "CORRELATION_HI_WU_2015_HYBRID.png")
+ggscatter(data = data2015_HYBRID, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2015_HYBRID", ylab = "HI 2015_HYBRID")
+dev.off()
+```
+
+
+```{r CORRELATION 2015 INBRED}
+
+############## correlation sur les données brutes 2015_HYBRID entre TE WU ET HI
+corTE_WU_2015_INBRED<-cor(data2015_INBRED$WU, data2015_INBRED$TE, use = "complete.obs")
+corTE_WU_2015_INBRED
+corTE_HI_2015_INBRED<-cor(data2015_INBRED$HI, data2015_INBRED$TE, use = "complete.obs")
+corTE_HI_2015_INBRED
+corWU_HI_2015_INBRED<-cor(data2015_INBRED$HI, data2015_INBRED$WU, use = "complete.obs")
+corWU_HI_2015_INBRED
+
+# visualisation correlation
+pdf(file = "CORRELATION_TE_HI_WU_2015_INBRED.pdf")
+ggscatter(data = data2015_INBRED, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2015_INBRED", ylab = "WU 2015_INBRED")
+ggscatter(data = data2015_INBRED, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2015_INBRED", ylab = "HI 2015_INBRED")
+ggscatter(data = data2015_INBRED, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2015_INBRED", ylab = "HI 2015_INBRED")
+dev.off()
+
+
+png(file = "CORRELATION_TE_WU_2015_INBRED.png")
+ggscatter(data = data2015_INBRED, x='TE', y='WU', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2015_INBRED", ylab = "WU 2015_INBRED")
+dev.off()
+png(file = "CORRELATION_TE_HI_2015_INBRED.png")
+ggscatter(data = data2015_INBRED, x='TE', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "TE 2015_INBRED", ylab = "HI 2015_INBRED")
+dev.off()
+png(file = "CORRELATION_HI_WU_2015_INBRED.png")
+ggscatter(data = data2015_INBRED, x='WU', y='HI', add = "reg.line", conf.int = TRUE, cor.coef = TRUE, cor.method = "pearson", xlab = "WU 2015_INBRED", ylab = "HI 2015_INBRED")
+dev.off()
+```
+
+
+```{r }
+#toolbox :
+
+#Error in setwd(dir = "C:/Users/2021lg003/Documents/Mirror/Pearl millet panel PMIGAP/Dataset/dataset_PMIGAP_pheno/data_PMIGAP_2012_WS_2013_2015") : 
+ # cannot change working directory  ###https://www.programmingr.com/r-error-messages/cannot-change-working-directory/
+setwd(dir = "~/")  ##revient aux documents
+
+
+ # Error in dev.off() : 
+#  impossible de fermer le périphérique 1 (périphérique null)
+  while (!is.null(dev.list()))  dev.off()
+```
+
+
+```{r }
