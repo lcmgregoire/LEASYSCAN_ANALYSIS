@@ -1,0 +1,111 @@
+---
+title: "Analysis_features"
+author: "Laura GREGOIRE"
+date: "2023-11-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r package and path }
+###packages
+library("Publish")
+library("car")
+library("multcomp")
+library("ggplot2")
+library("lubridate")
+library("stringr")
+library("formattable")
+library("ggpubr")
+library("dplyr")
+
+getwd()
+setwd(dir = "C:/Users/2021lg003/Documents/Sorghum/Experiments/EXP_INDE_2023/ANALYSIS_ALL_DATASET")
+
+```
+
+
+
+```{r VPD plot}
+inputfile_TR<-read.csv("./DATA_SMOOTHING/results/PERIODE1/OP-10_TR_smth.csv", sep = ";", header = TRUE)
+#inputfile_TR<-read.csv("C:/Users/2021lg003/Documents/Experiments/EXP1/OP-10_TR_smth_outliers_maxET_missing.csv", sep = ";", header = FALSE)
+
+VPD_df<-inputfile_TR[-c(9:nrow(inputfile_TR)),] ###enlever les lignes des load cells
+VPD_df<-VPD_df[,-c(2:7)] ###enlever les colonnes de 2 a 7
+VPD_df<-as.data.frame(t(VPD_df))
+colnames(VPD_df)<-VPD_df[1,]
+VPD_df<-VPD_df[-1,]
+rownames(VPD_df)<- sub("X","",rownames(VPD_df))
+VPD_df$Timestamp<-rownames(VPD_df)
+VPD_df <- VPD_df %>% mutate_at(c('Temp', 'RH','VPD', 'SR','WS', 'Tmax','Tmin', 'ETref'), as.numeric)
+VPD_df$Timestamp<-dmy_hm(VPD_df$Timestamp)  
+
+
+
+  png(file = "VPD_PERIODE1.png")
+  ggplot(VPD_df, aes(x=Timestamp, y=VPD))+
+    geom_point() +
+    labs(title = "VPD_measured") + ylab("VPD") + xlab("Date") +
+    ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
+    theme(axis.text.x=element_text(angle = -45, hjust = 0))
+  dev.off()
+  
+  
+    png(file = "ETref_PERIODE1.png")
+  ggplot(VPD_df, aes(x=Timestamp, y=ETref))+
+    geom_point() +
+    labs(title = "ETref ") + ylab("ETref (mm.day-1)") + xlab("Date") +
+    ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
+    theme(axis.text.x=element_text(angle = -45, hjust = 0))
+  dev.off()
+  
+```
+
+```{r TR plot}
+
+##Liste genotypes -trt 
+geno_info$Geno_Trt<-str_c(inputfile_TR$Genotype, "_", inputfile_TR$Treatment) ##concatenate Geno et rep
+geno_info<-data.frame(inputfile_TR$unit, inputfile_TR$Treatment, inputfile_TR$Genotype, inputfile_TR$Replicates, inputfile_TR$Geno_Trt)
+colnames(geno_info)<-c("unit", "Treatment", "Genotype", "Replicates", "Geno_Trt")
+
+
+###recup TR profils
+
+TR_profiles<-as.data.frame(t(inputfile_TR))
+TR_profiles<-TR_profiles[-c(1:9),] 
+
+TR_profiles<-TR_profiles[-c(1:2),] 
+colnames(TR_profiles)<-inputfile_TR$Geno_Trt
+TR_profiles=TR_profiles[-768,]
+TR_profiles<-TR_profiles[-c(1:5),] 
+TR_profiles=TR_profiles %>% mutate_if(is.character, as.numeric)
+
+
+TR_profiles$Timestamp<-rownames(TR_profiles)
+TR_profiles$Timestamp<-sub("X","",TR_profiles$Timestamp)
+TR_profiles$Timestamp<-dmy_hm(TR_profiles$Timestamp)
+
+
+
+  png(file = ".png")
+  
+  ggplot(TR_profiles, aes(x=Timestamp, y=))+
+    geom_point() +
+    labs(title = "VPD_measured") + ylab("VPD") + xlab("Date") +
+    ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
+    theme(axis.text.x=element_text(angle = -45, hjust = 0))
+  dev.off()
+
+
+```
+
+
+```{r}
+while (!is.null(dev.list()))  dev.off() ## si Error in dev.off() : 
+ # impossible de fermer le p?riph?rique 1 (p?riph?rique null)
+```
