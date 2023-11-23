@@ -105,7 +105,7 @@
 #' 
 #install.packages("easypackages")
 
-setwd(dir = "C:/Users/2021lg003/Documents/Sorghum/Experiments/EXP_INDE_2023/ANALYSIS_ALL_DATASET/DATA_SMOOTHING")
+setwd(dir = "C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING")
 
 #install.packages("readxl", "hms", "xts", "dplyr","mgcv","PerformanceAnalytics", "wavelets",  
                #  "signal", "tidyverse", "zoo", "h2o", "sqldf", "ggplot2", "plyr",
@@ -171,7 +171,7 @@ source('./functions/smoothETr.R')
 source('./functions/getFeatures.R')
 
 # Load data
-load("data/PERIODE2-01-10-10-10/IRD_data_Exp_NEW.RData")
+load("data/PERIODE2/IRD_data_Exp_NEW.RData")
 allData <- IRD_data_Exp_NEW
 
 
@@ -179,7 +179,7 @@ ldt <- readline(prompt = "Enter LAST DATE of experiment (YYYY-MM-DD): ")
 lastDate=as.Date(as.character(ldt)) #2023-10-10
 
 fdt <- readline(prompt = "Enter FIRST DATE of experiment (YYYY-MM-DD): ")
-firstDate=as.Date(as.character(fdt)) #2023-10-01
+firstDate=as.Date(as.character(fdt)) #2023-09-30
 
 seq_by <- readline(prompt = "Enter desired time (in min) interval, e.g. 15/30/45/60: ")
 
@@ -187,7 +187,7 @@ seq_by <- readline(prompt = "Enter desired time (in min) interval, e.g. 15/30/45
 # NOTE: If no such date, enter LAST DATE of experiment
 irrg.dts <- c("2023-10-10")
 
-Date1="2023-09-30 23:45:00" # Day before 'firstDate'(For 15min, "2021-04-18 23:46:00")
+Date1="2023-09-29 23:45:00" # Day before 'firstDate'(For 15min, "2021-04-18 23:46:00")
 Date2="2023-10-10 23:45:00" #'lastDate'(For 15min, "2022-04-29 23:45:00")
 
 opPATH <- "./results/"    #####opPATH <-"C:/Users/2021lg003/Documents/Manip_loadcells/Lissage_Manip_BenoitClerget_092022/results/"
@@ -231,6 +231,8 @@ LC.MAT.OP <- extractRawLCmatrix(x = m.lc,   y = meta.d.sp,
                                 s=firstDate, z = lastDate, 
                                 inter = seq_by)
 
+save(LC.MAT.OP, file = "./data/PERIODE2/LC.MAT.OP.RData")
+load(file = "./data/PERIODE2/LC.MAT.OP.RData")
 LC.MAT.f <- LC.MAT.OP$LC.MAT.f
 
 LC.MAT.TSinfo <- LC.MAT.OP$LC_tsmeta
@@ -310,6 +312,8 @@ ETr_Meta_ERRsec.rmvd <- ETr_Meta_ERRsec.rmvd[!ETr_Meta_ERRsec.rmvd$unit %in% err
 
 write.csv(ETr_Meta_ERRsec.rmvd, paste0(opPATH, 
                                        "OP-7","_ETr_Obs_FINAL.csv"))
+save(ETr_Meta_ERRsec.rmvd, file = "ETr_Meta_ERRsec.rmvd.RData")
+load("ETr_Meta_ERRsec.rmvd.RData")
 ##### END ######
 
 
@@ -417,7 +421,8 @@ VPD <- ((1 - (wthr.DFagg15min.filt[ ,3]/100))*SVP)/1000
 wthr.DFagg15min.filt[ ,4] <- VPD
 
 et.obs <- ETr_Meta_ERRsec.rmvd
-
+save(et.obs, file = "et.obs.RData")
+load( "et.obs.RData")
 
 ###################################################
 
@@ -435,6 +440,8 @@ wthr.ETref.ETobs <- as.data.frame(rbind(empty.MAT.wthr.ETref, et.obs))
 # Remove irrigation dates #
 file.colnms <- colnames(wthr.ETref.ETobs)
 wthr.ETref.ETobs <- wthr.ETref.ETobs[ ,!substr(file.colnms,1,10) %in% irrg.dts]
+
+save(wthr.ETref.ETobs, file = "wthr.ETref.ETobs.RData")
 
 write.csv(wthr.ETref.ETobs, paste0(opPATH, "OP-8","_wthr.ETref.ETobs.csv"))
 
@@ -680,6 +687,7 @@ colnames(F.He) <- c("maxET", "slope.maxET-6", "slope.07-maxET", "slope.00-07", "
 rownames(F.He) <- unq.dts
 
 featureHeRES <- getFeatureHe(x = allFeatures, y = wthr.ETref.ETobs, d = unq.dts, p =opPATH.raw)
+
 write.csv(featureHeRES, paste0(opPATH, "rawETr_featureH2.csv"))
 
 ### save all features as feature Time Series ###
@@ -796,8 +804,11 @@ ETr_smoothFILE <- ETr_smthIP
 ETr_smoothFILE[9:nrow(ETr_smoothFILE), 
                7:ncol(ETr_smoothFILE)] <- smoothETrMAT
 
-write.csv(ETr_smoothFILE, paste0(opPATH, "OP-9","_ETr_smth.csv"))
+save(ETr_smoothFILE, file = "ETr_smoothFILE.RData")
 
+
+write.csv(ETr_smoothFILE, paste0(opPATH, "OP-9","_ETr_smth.csv"))
+#ETr_smoothFILE=read.csv2("./results/PERIODE2/OP-9_ETr_smth.csv")
 
 # Calculate Tr from smooth ETr
 # Tr_OP <- calculateTr(x = ETr_smoothFILE, y = pe.df.ETr, z = LAI.mat, d = unq.dts)
@@ -925,22 +936,57 @@ write.csv(as.data.frame(cbind(ETr_smoothFILE[9:nrow(ETr_smoothFILE), 1:6], cos.s
           paste0(opPATH.smth, "cos.sim.index.csv"))
 
 ##### Smooth Transpiration Rate (TR) Calculation #####
+load(file = "ETr_smoothFILE.RData")
 
 ets = ETr_smoothFILE
 
-laidf = read.csv("./data/PERIODE2-01-10-10-10/LA_PERIODE2.csv", sep = ";")
+########PERIODE 1 
+laidf=read.csv("./results/PERIODE1/LA_P1_LCsaved.csv", sep = ";")
+colnames(laidf)[9:ncol(laidf)] <- sub("X","",colnames(laidf)[9:ncol(laidf)])
+laidf_wk= laidf %>% mutate( "2023-09-22.12.00" = mean(c(laidf$'22.09.2023.10.34', laidf$'22.09.2023.13.18'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-09-23.12.00" = mean(c(laidf$'23.09.2023.06.28', laidf$'23.09.2023.08.54'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-09-24.12.00" = mean(c(laidf$'24.09.2023.08.55', laidf$'24.09.2023.11.54'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-09-25.12.00" = mean(c(laidf$'25.09.2023.08.59', laidf$'25.09.2023.13.19'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-09-26.12.00" = mean(c(laidf$'26.09.2023.09.00', laidf$'26.09.2023.13.13'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-09-27.12.00" = mean(c(laidf$'27.09.2023.08.41', laidf$'27.09.2023.14.13'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-09-28.12.00" = mean(c(laidf$'28.09.2023.08.34', laidf$'28.09.2023.11.10'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-09-29.12.00" = mean(c(laidf$'29.09.2023.10.23', laidf$'29.09.2023.13.15'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-09-30.12.00" = mean(c(laidf$'30.09.2023.07.12', laidf$'30.09.2023.09.27'), na.rm=TRUE))
+laidf=cbind(laidf_wk[1:8],laidf_wk[27:ncol(laidf_wk)] )
+colnames(laidf)=c("unit","old_unit","Experiment", "Treatment","Species","Genotype", "G__Alias","Replicates"  ,  "2023-09-22",  "2023-09-23","2023-09-24","2023-09-25","2023-09-26",
+                  "2023-09-27","2023-09-28","2023-09-29","2023-09-30" )
+
+
+########PERIODE 2
+laidf=read.csv("./results/PERIODE2/LA_P2_LCsaved.csv", sep = ";")
+colnames(laidf)[9:ncol(laidf)] <- sub("X","",colnames(laidf)[9:ncol(laidf)])
+
+laidf_wk= laidf %>% mutate( "2023-10-01.12.00" = mean(c(laidf$'01.10.2023.11.32', laidf$'01.10.2023.14.19'), na.rm=TRUE))
+laidf_wk= laidf %>% mutate( "2023-10-02.12.00" = mean(c(laidf$'02.10.2023.09.32', laidf$'02.10.2023.09.32'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-10-03.12.00" = mean(c(laidf$'03.10.2023.08.49', laidf$'03.10.2023.13.23'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-10-04.12.00" = mean(c(laidf$'04.10.2023.08.47', laidf$'04.10.2023.08.47'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-10-05.12.00" = mean(c(laidf$'05.10.2023.09.16', laidf$'05.10.2023.13.47'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-10-06.12.00" = mean(c(laidf$'06.10.2023.08.52', laidf$'06.10.2023.14.11'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-10-07.12.00" = mean(c(laidf$'07.10.2023.06.39', laidf$'07.10.2023.08.28'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-10-08.12.00" = mean(c(laidf$'08.10.2023.08.04', laidf$'08.10.2023.10.28'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-10-09.12.00" = mean(c(laidf$'09.10.2023.08.45', laidf$'09.10.2023.13.57'), na.rm=TRUE))
+laidf_wk= laidf_wk %>% mutate( "2023-10-10.12.00" = mean(c(laidf$'10.10.2023.08.39', laidf$'10.10.2023.13.17'), na.rm=TRUE))
+laidf=cbind(laidf_wk[1:8],laidf_wk[27:ncol(laidf_wk)] )
+colnames(laidf)=c("unit","old_unit","Experiment", "Treatment","Species","Genotype", "G__Alias","Replicates"  ,  "2023-10-01","2023-10-02",  "2023-10-03","2023-10-04","2023-10-05","2023-10-06",
+                  "2023-10-07","2023-10-08","2023-10-09","2023-10-10" )
+#write.csv(laidf, "LA_785_mean_by_day.csv")
 #laidf <- na.approx(laidf[,9:ncol(laidf)])
 # Get unique sector names
 ets.sec <- unique(ets$old_unit)
 lai_sec <- laidf$old_unit
 
-# Convert column names to Date format
-colnames(laidf)[9:ncol(laidf)] <- sub("X","",colnames(laidf)[9:ncol(laidf)])
 
 lai_dts <- colnames(laidf)[9:ncol(laidf)]
-lai_dtsseq <- dmy_hm(lai_dts)
+unq.dts=lubridate::as_date(lai_dtsseq)
+unq.dts=lai_dts 
 
-colnames(laidf)[9:ncol(laidf)]<-as.character(lai_dtsseq) 
+#colnames(laidf)[9:ncol(laidf)]<-as.character(lai_dtsseq) 
+
 
 # Extract ETr part
 etsMat <- ets[9:nrow(ets), c(1,7:ncol(ets))]
@@ -954,11 +1000,12 @@ for(i in 1:nrow(etsMat)) {
   
   for(j in 1:length(unq.dts)){
     print(j)
-    d_j <- unq.dts[j]
+    d_j <- unq.dts[j]  ##not working if you have several 
     sec_j <- etsMat[i,1]
+    
     lai_j <- laidf[laidf$unit==sec_j, d_j]
     
-    if(is.na(lai_j)==TRUE){
+    if(is.null(lai_j)==TRUE){
       lai_j == 0.0
       etsTmpMat[,j] <- unlist(etsTmpMat[,j])/lai_j
     }else{
@@ -974,6 +1021,8 @@ TR_smoothFILE[9:nrow(TR_smoothFILE),
               7:ncol(TR_smoothFILE)] <- trMat[ , 2:ncol(trMat)]
 
 write.csv(TR_smoothFILE, paste0(opPATH, "OP-10_TR_smth.csv"))
+
+
 
 ### Feature Extraction of SMOOTH TR Data ###
 featuresRES <- getFeatures(x = TR_smoothFILE)
@@ -1018,8 +1067,8 @@ for (j in 1:(nrow(TR_smoothFILE)-8)){
   # "total.auc","auc.10-15", "sd.10-15", "auc.prop.10-15", "auc.07-19", "sd.07-19",  
   # "auc.prop.07-19", "auc.night", "cos.sim.index"
   
-  for(d in 1:length(unq.dts))
-  {maxET[j, d] <- data.frame(allFeatures[[j]][d, 1])
+  for(d in 1:length(unq.dts))   {
+    maxET[j, d] <- data.frame(allFeatures[[j]][d, 1])
   slope.maxET.6[j, d] <- data.frame(allFeatures[[j]][d, 2])
   slope.07maxET[j, d] <- data.frame(allFeatures[[j]][d, 3])
   slope.00.07 [j, d] <- data.frame(allFeatures[[j]][d, 4])

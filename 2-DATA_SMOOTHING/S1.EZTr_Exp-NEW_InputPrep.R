@@ -1,4 +1,4 @@
-setwd(dir = "C:/Users/2021lg003/Documents/Sorghum/Experiments/EXP_INDE_2023/ANALYSIS_ALL_DATASET/DATA_SMOOTHING")
+setwd(dir = "C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING")
 load("./HTP_data.RData")
 m.lc <- HTP_data$m.lc
 meta.d <- HTP_data$meta.d
@@ -10,15 +10,15 @@ library(dplyr)
 library(lubridate)
 
 ### Create meta.d ###
-allsec.d <- read.csv("./data/PERIODE2-01-10-10-10/meta.d_raw.csv", sep = ";")
+allsec.d <- read.csv("./data/PERIODE2/meta.d_raw.csv", sep = ";")
 meta.d<-allsec.d
 
-write.csv(meta.d, "data/PERIODE2-01-10-10-10/meta.d.csv")
-save(meta.d, file = "data/PERIODE2-01-10-10-10/meta.d.RData")
+write.csv(meta.d, "data/PERIODE2/meta.d.csv")
+save(meta.d, file = "data/PERIODE2/meta.d.RData")
 
 ### Create m.lc ###
 # cereals original LC data #
-all.lc <- read.csv("data/PERIODE2-01-10-10-10/m.lc_raw_PERIODE2.csv", sep = ";")
+all.lc <- read.csv("data/PERIODE2/m.lc_raw_PERIODE2.csv", sep = ";")
 new.lc<-as.data.frame(matrix(nrow = nrow(all.lc), ncol = ncol(m.lc)))
 colnames(new.lc) <- colnames(m.lc)
 #new.lc$unit <- paste0(all.lc$Row,"-1",":",all.lc$Column)
@@ -33,27 +33,27 @@ for (i in 1:nrow(new.lc)) {
   new.lc$treatment[i]<-unique(meta.d$Treatment[r.ind])
 }
 m.lc <- new.lc
-write.csv(m.lc, "data/PERIODE2-01-10-10-10/m.lc_PERIODE2.csv")
-save(m.lc, file = "data/PERIODE2-01-10-10-10/m.lc_PERIODE2.RData")
+write.csv(m.lc, "data/PERIODE2/m.lc_PERIODE2.csv")
+save(m.lc, file = "data/PERIODE2/m.lc_PERIODE2.RData")
 
 
 
 ### Create Climate data ###
 
-clm <- read.csv("data/PERIODE2-01-10-10-10/climate_raw_PERIODE2.csv", sep = ";") ##ici, pb de colonne : clm.n <- clm[,1:7] si on ne met pas de separateur ;
+clm <- read.csv("data/PERIODE2/climate_raw_PERIODE2.csv", sep = ";") ##ici, pb de colonne : clm.n <- clm[,1:7] si on ne met pas de separateur ;
 clm.n <- clm[,1:7]
 
 clm.n$Date <- dmy(clm.n$Date)
 clm.n$RH <- substr(clm.n$RH, 1, 2)  
 clm.n$RH <- as.numeric(clm.n$RH)  
 
-write.csv(clm.n, "data/PERIODE2-01-10-10-10/climate_PERIODE2.csv")
-save(clm.n, file = "data/PERIODE2-01-10-10-10/climate_PERIODE2.RData")
+write.csv(clm.n, "data/PERIODE2/climate_PERIODE2.csv")
+save(clm.n, file = "data/PERIODE2/climate_PERIODE2.RData")
   
 ### Exp-Layla2a ###
 IRD_data_Exp_NEW <- list(m.lc = m.lc, meta.d = meta.d, climate = clm.n)
 
-save(IRD_data_Exp_NEW, file = "data/PERIODE2-01-10-10-10/IRD_data_Exp_NEW.RData")
+save(IRD_data_Exp_NEW, file = "data/PERIODE2/IRD_data_Exp_NEW.RData")
 
 ###########################################################
 
