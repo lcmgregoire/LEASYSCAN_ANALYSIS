@@ -13,17 +13,12 @@ knitr::opts_chunk$set(echo = TRUE)
 # __MATERIAL and methods__
 ##  Description of experiment and plant material
 A trial was carried out in the International Crops Research Institute for the Semi-Arid Tropics (ICRISAT, Patancheru, India, 17.5111° N, 78.2752° E ) in  September-October 2023. 
-Weather data was recorded during the trial period. The temperature ranged from .. to .. °C, Relative humidity (RH) measured between 7am and 5pm ranged to, the solar radiation ranged from .. to .. Precipitation was recorded, but but no rain occurred during this period. The vapor pressure deficit (VPD) was calculated using the method proposed by FAO.. The daily VPD ranged between .. to .. during the experiment.
-
-The plant material, correspond to 320 accessions belonging to the list of reference RefSet defined by the Genebank of ICRISAT (Reference). This list includes  contrasting TE genotypes observed in previous experiments (Reference Vadez 1011). 
+Weather data was recorded during the trial period. The temperature ranged from 16.3 to 39.0 °C, Relative humidity (RH) measured between 7am and 5pm ranged to, the solar radiation ranged from 29.4 to 100% Precipitation was recorded, but but no rain occurred during this period. The vapor pressure deficit (VPD) was calculated using the method proposed by FAO.. The daily VPD ranged between .. to .. during the experiment.
+The plant material corresponded to 320 accessions belonging to the reference RefSet list defined by the ICRISAT gene bank (Reference). Among these accessions also included genotypes with  contrasting TE, observed in previous experiments (Reference Vadez 1011). 
 
 ##Soil filling and growth conditions 
-Plants were grown in large trays (40* 60* 30 length–width-height), filled with black soil (see details 60 L vertisoil ??) collected from the ICRISAT farm, and containing 4 plants per tray after thinning. With this density, the canopy of one tray could eventually joined another tray nearby, and create a closed canopy at the end of the experiment.  
+Plants were grown in large trays (40* 60* 30 length–width-height), filled with black soil collected from the ICRISAT farm. The trays were arranged in blocks of  8 x 40 trays in Alpha-lattice of 4 replications, on four trenchs. The soil was prepared with **Manure, muriate of potash? Urea? di-ammonium phosphate (DAP) what rate ?**. Sowing was performed in rows the 14 September 2023, and 4 plants were kept per tray after the final thinning 13 DAS (27 September 2023). With this density, the canopy of one tray could eventually joined another tray nearby, and create a closed canopy at the end of the experiment.  
 
-The trays were arranged in blocks of  8 x 40 trays in Alpha-lattice of 4 replications, on four trench. 
-
-Planting was done on 14 September in line. **Manure, muriate of potash? Urea? di-ammonium phosphate (DAP) what rate ?**
- Seedlings were thinned a first time at ... DAS and  .. DAS. 
 Trays were watered to stay in well-watered condition during the whole experiment. It was performed with a drip irrigation system once every 4 days at 3:00 pm to field capacity. In the timeframe of the experiment, ... irrigations were done. 
 
 ##Leasyscan measurements
@@ -34,10 +29,30 @@ Measurements were done on the Leasyscan system, a HTP platform which consists of
 The number of ligulated  (fully-developed) leaves was counted on 10 trays at random per trench (40 in total) 15 days before harvest? 
 
 ##Harvest procedures
-The shoot part was harvested at ... DAS. Of the four plants per tray, two were used to measure leaf area using a planimeter (Licor brand ??, in cm²). The shoot parts of the four plants per tray were then harvested and dried during 4 days in a forced-air oven at 60°C. Transpiration values and hourly transpiration were calculated for each tray between two weighing measurements.  To consider plant size when estimating transpiration, the transpiration rate (TRrate) was estimated as the ratio between hourly transpiration and leaf area measured at the same period (g. h<sup>-1</sup>. mm<sup>-2</sup>). 
 
-# __MATERIAL and methods__
+The harvest was performed on the shoot part at 33 and 37 DAS. Among the four replicates, one plant from one replicate was used for leaf area measurement using a planimeter (Licor brand ??, in cm²), All samples were harvested and dried during 4 days in a forced-air oven at 60°C. Transpiration values and hourly transpiration were calculated for each tray between two weighing measurements.  To consider plant size when estimating transpiration, the transpiration rate (TRrate) was estimated as the ratio between hourly transpiration and leaf area measured at the same period (g. h<sup>-1</sup>. mm<sup>-2</sup>). 
 
+
+
+# __MAIN QUESTIONS__
+Are there significant differences in features between genotypes? 
+If so, what does this mean from a physiological point of view? 
+Is this trait heritable? 
+
+
+# __MAIN STEPS __
+-Check data quality (missing LC and PE data, etc.)  
+-Draw initial transpiration profiles from raw data. (to see the effect of smoothing)
+-smooth the data using the Kar et al. pipeline. 
+-Do we see significant differences in features/LA among genotypes? Heritability? 
+-SPATS to correct spatial variability on features results. 
+-Differences from previous result?
+
+
+As the dataset is large, we work on periods of around 10 days: PERIOD 1 from 22-09 to 01-10, PERIOD 2 from 01-10 to 10-10 and PERIOD 3 from 10- to 18 -10.we work from 27 -09 last thinning and 17-10 preharvest and we remove the days of irrigation 
+
+- Plot the LA curve over time:
+-From which day onwards is the planimeter measurement more relevant? 
 
 ```{r toolbox markdown, include=FALSE }
 
@@ -343,7 +358,7 @@ for ( i in levels(data_planteye$genotype) ) {
 for ( i in levels(data_planteye$genotype) ) {
 
       subset <- data_planteye %>% 
-    dplyr::filter(data_planteye$genotype == i) ##136 obs (4 caisses)
+    dplyr::filter(data_planteye$genotype == i) ##136 obs (4 trays)
 
 model=lm(Leaf.area..mm..~treatment, data = subset)
 aov<-Anova(model)
@@ -785,4 +800,24 @@ for ( i in levels(data_drought_spotter$geno_trt) ) {
 
 now the perspiration profiles are logical in most cases, but they're not smoothed - we'll use the Soumya pipeline. 
 
+############################
+Data smoothing Kar et al 2020, see 2-DATA_SMOOTHING
+Work on data by period : 
+-PERIOD 1 from 22-09 to 01-10, 
+-PERIOD 2 from 01-10 to 10-10 and 
+-PERIOD 3 from 10- to 18 -10
+
+Last thinning : 27 September to Preharvest : 17.10
+###########################
+
+
+
+Based on the transpiration profiles we can assume that the irrigation took place:
+-29-09
+-03-10
+-06-10
+-10-10
+-13-10
+-19-10
+We will removed these dates in the analysis. 
 
