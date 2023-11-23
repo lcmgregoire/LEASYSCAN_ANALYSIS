@@ -25,83 +25,248 @@ library("ggpubr")
 library("dplyr")
 
 getwd()
-setwd(dir = "C:/Users/2021lg003/Documents/Sorghum/Experiments/EXP_INDE_2023/ANALYSIS_ALL_DATASET")
+setwd(dir = "C:/Users/2021lg003/Documents/LEASYSCAN_EXP_INDE_2023/RESULTS/3-AFTER_SMOOTHING")
 
 ```
 
 
+```{r load data }
+#We select data from September 27 to October 17. (We plot the weather data on these data).
+#Then we remove the irrigation days
 
-```{r VPD plot}
-inputfile_TR<-read.csv("./DATA_SMOOTHING/results/PERIODE1/OP-10_TR_smth.csv", sep = ";", header = TRUE)
-#inputfile_TR<-read.csv("C:/Users/2021lg003/Documents/Experiments/EXP1/OP-10_TR_smth_outliers_maxET_missing.csv", sep = ";", header = FALSE)
+#Read and  reassemble the three periods. 
+TR_PERIODE1<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE1/OP-10_TR_smth.csv", sep = ";", header = TRUE)
+inputfile_TR=TR_PERIODE1
 
-VPD_df<-inputfile_TR[-c(9:nrow(inputfile_TR)),] ###enlever les lignes des load cells
-VPD_df<-VPD_df[,-c(2:7)] ###enlever les colonnes de 2 a 7
-VPD_df<-as.data.frame(t(VPD_df))
-colnames(VPD_df)<-VPD_df[1,]
-VPD_df<-VPD_df[-1,]
-rownames(VPD_df)<- sub("X","",rownames(VPD_df))
-VPD_df$Timestamp<-rownames(VPD_df)
-VPD_df <- VPD_df %>% mutate_at(c('Temp', 'RH','VPD', 'SR','WS', 'Tmax','Tmin', 'ETref'), as.numeric)
-VPD_df$Timestamp<-dmy_hm(VPD_df$Timestamp)  
+colnames(inputfile_TR)[8:ncol(inputfile_TR)] <- sub("X","",colnames(inputfile_TR)[8:ncol(inputfile_TR)])
+timeline=colnames(inputfile_TR[8:ncol(inputfile_TR)])
+timeline=dmy_hm(timeline)
+
+##Liste genotypes -trt 
+inputfile_TR$Geno_Trt<-str_c(inputfile_TR$Genotype, "_", inputfile_TR$Treatment) ##concatenate Geno et rep
+geno_info<-data.frame(inputfile_TR$unit, inputfile_TR$Treatment, inputfile_TR$Genotype, inputfile_TR$Replicates, inputfile_TR$Geno_Trt)
+colnames(geno_info)<-c("unit", "Treatment", "Genotype", "Replicates", "Geno_Trt")
+geno_info=geno_info[-c(1:8),]
+```
+
+```{r VPD ETref plot}
+
+climate_df<-inputfile_TR[-c(9:nrow(inputfile_TR)),] ###enlever les lignes des load cells
+climate_df<-climate_df[,-c(2:7)] ###enlever les colonnes de 2 a 7
+climate_df<-as.data.frame(t(climate_df))
+colnames(climate_df)<-climate_df[1,]
+climate_df<-climate_df[-1,]
+rownames(climate_df)<- sub("X","",rownames(climate_df))
+climate_df$Timestamp<-rownames(climate_df)
+climate_df <- climate_df %>% mutate_at(c('Temp', 'RH','VPD', 'SR','WS', 'Tmax','Tmin', 'ETref'), as.numeric)
+climate_df$Timestamp<-dmy_hm(climate_df$Timestamp)  
 
 
 
-  png(file = "VPD_PERIODE1.png")
-  ggplot(VPD_df, aes(x=Timestamp, y=VPD))+
+  png(file = "VPD_plot.png")
+  ggplot(climate_df, aes(x=Timestamp, y=VPD))+
     geom_point() +
-    labs(title = "VPD_measured") + ylab("VPD") + xlab("Date") +
+    labs(title = "VPD measured during experiment") + ylab("VPD (kPa)") + xlab("Date") +
     ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
     theme(axis.text.x=element_text(angle = -45, hjust = 0))
   dev.off()
   
   
-    png(file = "ETref_PERIODE1.png")
-  ggplot(VPD_df, aes(x=Timestamp, y=ETref))+
+    png(file = "ETref_plot.png")
+  ggplot(climate_df, aes(x=Timestamp, y=ETref))+
     geom_point() +
-    labs(title = "ETref ") + ylab("ETref (mm.day-1)") + xlab("Date") +
+    labs(title = "ETref measured during experiment") + ylab("ETref (mm.day-1)") + xlab("Date") +
     ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
     theme(axis.text.x=element_text(angle = -45, hjust = 0))
   dev.off()
   
 ```
+
+
+
 
 ```{r TR plot}
 
-##Liste genotypes -trt 
-geno_info$Geno_Trt<-str_c(inputfile_TR$Genotype, "_", inputfile_TR$Treatment) ##concatenate Geno et rep
-geno_info<-data.frame(inputfile_TR$unit, inputfile_TR$Treatment, inputfile_TR$Genotype, inputfile_TR$Replicates, inputfile_TR$Geno_Trt)
-colnames(geno_info)<-c("unit", "Treatment", "Genotype", "Replicates", "Geno_Trt")
-
-
-###recup TR profils
-
+######### TR 
 TR_profiles<-as.data.frame(t(inputfile_TR))
-TR_profiles<-TR_profiles[-c(1:9),] 
-
+TR_profiles<-TR_profiles[-c(1:8)] ### remove climate data (first column)
 TR_profiles<-TR_profiles[-c(1:2),] 
-colnames(TR_profiles)<-inputfile_TR$Geno_Trt
-TR_profiles=TR_profiles[-768,]
-TR_profiles<-TR_profiles[-c(1:5),] 
-TR_profiles=TR_profiles %>% mutate_if(is.character, as.numeric)
+colnames(TR_profiles)=TR_profiles[nrow(TR_profiles),]
+TR_profiles=TR_profiles[-nrow(TR_profiles),]
+TR_profiles<-TR_profiles[-c(1:3),]
+TR_profiles<-as.data.frame(TR_profiles)
+TR_profiles<-TR_profiles[-c(1:2),]
 
+##identify duplicated column : 
+geno_info$Geno_Trt[duplicated(geno_info$Geno_Trt)] ## Empty_WW_R4 and NA
+geno_info[!duplicated(geno_info$Geno_Trt), ]
+
+## remove duplicated column
+TR_profiles <- TR_profiles[, !duplicated(colnames(TR_profiles))]
+
+#num 
+TR_profiles <- TR_profiles %>% mutate_if(is.character, as.numeric)
+rownames(TR_profiles)=timeline
 
 TR_profiles$Timestamp<-rownames(TR_profiles)
-TR_profiles$Timestamp<-sub("X","",TR_profiles$Timestamp)
-TR_profiles$Timestamp<-dmy_hm(TR_profiles$Timestamp)
+TR_profiles %>% arrange(Timestamp)     #order subset according timeline
+TR_profiles$Timestamp<-ymd_hms(TR_profiles$Timestamp)
+
+##remove irrigation date
+
+##genotype and geno_trt as factor 
 
 
 
-  png(file = ".png")
+
+##TR profil by plot 
+for ( i in 1:ncol(TR_profiles)) { 
+  subset_geno_trt <- data.frame(TR_profiles[i], timeline, colnames(TR_profiles[i]) )
+  colnames(subset_geno_trt)=c("TR", "Timestamp","Geno_Trt")
+  #subset_geno_trt$Exp60_125_IS15752_WW_R1<-as.numeric( subset_geno_trt$Exp60_125_IS15752_WW_R1)
+  #subset_geno_trt$timeline<-ymd_hms( subset_geno_trt$timeline)
+
   
-  ggplot(TR_profiles, aes(x=Timestamp, y=))+
-    geom_point() +
-    labs(title = "VPD_measured") + ylab("VPD") + xlab("Date") +
+  for (j in 1:nrow(subset_geno_trt)) {
+    if (isTRUE(subset_geno_trt[j,1] > 1)){
+  subset_geno_trt[j,1]=NA
+    }
+    print(j)
+    j=j+1
+  }
+
+  png(file = paste("Transpiration rate Geno_Trt",subset_geno_trt$Geno_Trt[1],".png"))
+  
+  plot<-
+    ggplot(data = subset_geno_trt, aes(subset_geno_trt$Timestamp,subset_geno_trt$TR))   +
+    ylab("Transpiration (mm.day.mm²) ")+
+    xlab("Date ")+
+    labs(title = subset_geno_trt$Geno_Trt[1])  +
+    geom_point()+
+    geom_line()   +
     ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
     theme(axis.text.x=element_text(angle = -45, hjust = 0))
+  
+  print(plot)
   dev.off()
+  print(i)
+
+}
+
+#select all columns that contain "genotype name" 
+subset_geno = TR_profiles[,grepl("Exp60_126_IS16044",names(TR_profiles))]
+subset_geno = cbind (subset_geno, timeline)
+subset_geno <- melt(subset_geno ,  id.vars = 'timeline', variable.name = 'rep')
+
+ for (j in 1:nrow(subset_geno)) {
+    if (isTRUE(subset_geno[j,3] > 1)){
+  subset_geno[j,3]=NA
+    }
+    print(j)
+    j=j+1
+  }
+
+x=subset_geno$timeline
+y=subset_geno$value
+##convert dataframe into plain text
+
+ for ( i in levels(TR_profiles$genotype) ) { 
+
+  
+  
+  png(file = paste("Transpiration rate Geno",i,".png"))
+
+    
+  png(file = paste("TR rate"i,"4_reps",".png"))
+    
+  plot<-
+   ggplot(subset_geno, aes(x, y)) +
+    geom_line(aes(colour = rep))+
+    ylab("TR rate")+
+    xlab("Date")+
+    labs(title = paste("Transpiration Geno",i))  +
+  geom_point(aes(color = rep))+
+  ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
+  theme(axis.text.x=element_text(angle = -45, hjust = 0))
+
+  print(plot)
+  dev.off()
+  
+  print(i)
+
+}
 
 
+```
+
+Do we have outlier in TR profils? 
+
+
+
+```{r Load features smoothed data }
+##### Load features smoothed data on trial period : 
+##DO NOT LOAD IRRIGATION DATES
+features_d1<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-09-27.csv")
+features_d2<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-09-28.csv")
+features_d3<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-09-29.csv")
+features_d4<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-09-30.csv")
+features_d5<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-01.csv") 
+features_d6<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-02.csv") 
+features_d7<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-03.csv") 
+features_d8<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-04.csv") 
+features_d9<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-05.csv") 
+features_d10<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-06.csv") 
+features_d11<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-07.csv") 
+features_d12<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-08.csv") 
+features_d13<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-09.csv") 
+features_d14<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-10.csv") 
+features_d15<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-11.csv") 
+features_d16<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-12.csv") 
+features_d17<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-13.csv") 
+features_d18<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-14.csv") 
+features_d19<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-15.csv") 
+features_d20<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-16.csv") 
+features_d21<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-17.csv") 
+features_d22<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-18.csv") 
+
+###ADD DATE ON EACH FEATURE BEFORE BINDING
+
+
+
+###BIND ALL DATES 
+
+features<-cbind(features_d1, features_d2, features_d3, features_d4, features_d5, features_d6, features_d7, features_d8, features_d9, features_d10, features_d11, features_d12, features_d13, features_d14, features_d15, features_d16, features_d17, features_d18, features_d19, features_d20, features_d21, features_d22 °
+
+                
+## KEEP ONE TIME : unit	old_unit	Treatment	Genotype	G..Alias	Replicates
+
+# CREATE DATAFRAME FOR EACH FEATURE,ONE COLOMN PER DATE 
+
+maxET = features[,grepl("maxET", names(features))]
+slope-maxET=features[,grepl("slope.maxET-6",names(features))]
+slope-seven-maxET=features[,grepl("slope.maxET-6",names(features))]
+slope-zero-seven = features[,grepl("slope.00-07",names(features))]
+slope-nineteen-midnight = features[,grepl("slope.19-23:45",names(features))]
+curvmaxET = features[,grepl("curvmaxET",names(features))]
+total.auc = features[,grepl("total.auc",names(features))]
+auc-ten-fifteen = features[,grepl("auc.10-15",names(features))]
+sd-ten-fifteen = features[,grepl("sd.10-15",names(features))]
+auc-prop-ten-fifteen = features[,grepl("auc.prop.10-15",names(features))]
+auc-seven-nineteen = features[,grepl("auc.07-19",names(features))]
+sd-seven-nineteen = features[,grepl("sd.07-19",names(features))]
+auc-prop-seven-nineteen = features[,grepl("auc.prop.07-19",names(features))]
+auc-night= features[,grepl("auc.night",names(features))]
+cos.sim.index= features[,grepl("cos.sim.index",names(features))]
+
+
+###put feature on same column
+maxET <- melt(maxET ,  id.vars = 'genotype?', variable.name = 'rep')
+
+
+###anova 
+
+Anova ( mod = value ~ genotype, maxET  )	
+H2
 ```
 
 
