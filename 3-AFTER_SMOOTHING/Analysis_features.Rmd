@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-```{r package and path }
+```{r package and path,  include=FALSE}
 ###packages
 library("Publish")
 library("car")
@@ -23,6 +23,7 @@ library("stringr")
 library("formattable")
 library("ggpubr")
 library("dplyr")
+library("reshape2")
 
 getwd()
 setwd(dir = "C:/Users/2021lg003/Documents/LEASYSCAN_EXP_INDE_2023/RESULTS/3-AFTER_SMOOTHING")
@@ -35,23 +36,29 @@ setwd(dir = "C:/Users/2021lg003/Documents/LEASYSCAN_EXP_INDE_2023/RESULTS/3-AFTE
 #Then we remove the irrigation days
 
 #Read and  reassemble the three periods. 
-TR_PERIODE1<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE1/OP-10_TR_smth.csv", sep = ";", header = TRUE)
-inputfile_TR=TR_PERIODE1
+inputfile_TR<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/OP-10_TR_smth.csv", sep = ";", header = TRUE)
 
-colnames(inputfile_TR)[8:ncol(inputfile_TR)] <- sub("X","",colnames(inputfile_TR)[8:ncol(inputfile_TR)])
+colnames(inputfile_TR)[10:ncol(inputfile_TR)] <- sub("X","",colnames(inputfile_TR)[10:ncol(inputfile_TR)])
+inputfile_TR=inputfile_TR[-c(8:9)]
 timeline=colnames(inputfile_TR[8:ncol(inputfile_TR)])
 timeline=dmy_hm(timeline)
+
+
 
 ##Liste genotypes -trt 
 inputfile_TR$Geno_Trt<-str_c(inputfile_TR$Genotype, "_", inputfile_TR$Treatment) ##concatenate Geno et rep
 geno_info<-data.frame(inputfile_TR$unit, inputfile_TR$Treatment, inputfile_TR$Genotype, inputfile_TR$Replicates, inputfile_TR$Geno_Trt)
 colnames(geno_info)<-c("unit", "Treatment", "Genotype", "Replicates", "Geno_Trt")
 geno_info=geno_info[-c(1:8),]
+geno_info=na.omit(geno_info)
+
+
+
 ```
 
 ```{r VPD ETref plot}
 
-climate_df<-inputfile_TR[-c(9:nrow(inputfile_TR)),] ###enlever les lignes des load cells
+climate_df<-inputfile_TR[-c(9:nrow(inputfile_TR)),] ###keep only climate rows (removed LC rows)
 climate_df<-climate_df[,-c(2:7)] ###enlever les colonnes de 2 a 7
 climate_df<-as.data.frame(t(climate_df))
 colnames(climate_df)<-climate_df[1,]
@@ -60,7 +67,7 @@ rownames(climate_df)<- sub("X","",rownames(climate_df))
 climate_df$Timestamp<-rownames(climate_df)
 climate_df <- climate_df %>% mutate_at(c('Temp', 'RH','VPD', 'SR','WS', 'Tmax','Tmin', 'ETref'), as.numeric)
 climate_df$Timestamp<-dmy_hm(climate_df$Timestamp)  
-
+climate_df=na.omit(climate_df)
 
 
   png(file = "VPD_plot.png")
@@ -68,24 +75,27 @@ climate_df$Timestamp<-dmy_hm(climate_df$Timestamp)
     geom_point() +
     labs(title = "VPD measured during experiment") + ylab("VPD (kPa)") + xlab("Date") +
     ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
-    theme(axis.text.x=element_text(angle = -45, hjust = 0))
+    theme(axis.text.x=element_text(angle = -45, hjust = 0))+
+    geom_line()
   dev.off()
-  
+  while (!is.null(dev.list())) 
   
     png(file = "ETref_plot.png")
   ggplot(climate_df, aes(x=Timestamp, y=ETref))+
     geom_point() +
     labs(title = "ETref measured during experiment") + ylab("ETref (mm.day-1)") + xlab("Date") +
     ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
-    theme(axis.text.x=element_text(angle = -45, hjust = 0))
+    theme(axis.text.x=element_text(angle = -45, hjust = 0))+
+    geom_line()
   dev.off()
-  
+
 ```
 
 
 
 
 ```{r TR plot}
+
 
 ######### TR 
 TR_profiles<-as.data.frame(t(inputfile_TR))
@@ -97,6 +107,12 @@ TR_profiles<-TR_profiles[-c(1:3),]
 TR_profiles<-as.data.frame(TR_profiles)
 TR_profiles<-TR_profiles[-c(1:2),]
 
+TR_profiles$Timestamp<-rownames(TR_profiles)
+
+TR_profiles$Timestamp<-dmy_hm(TR_profiles$Timestamp)
+
+
+
 ##identify duplicated column : 
 geno_info$Geno_Trt[duplicated(geno_info$Geno_Trt)] ## Empty_WW_R4 and NA
 geno_info[!duplicated(geno_info$Geno_Trt), ]
@@ -104,36 +120,73 @@ geno_info[!duplicated(geno_info$Geno_Trt), ]
 ## remove duplicated column
 TR_profiles <- TR_profiles[, !duplicated(colnames(TR_profiles))]
 
-#num 
-TR_profiles <- TR_profiles %>% mutate_if(is.character, as.numeric)
-rownames(TR_profiles)=timeline
-
-TR_profiles$Timestamp<-rownames(TR_profiles)
-TR_profiles %>% arrange(Timestamp)     #order subset according timeline
-TR_profiles$Timestamp<-ymd_hms(TR_profiles$Timestamp)
-
-##remove irrigation date
-
-##genotype and geno_trt as factor 
+##only trial period
+start=which(rownames(TR_profiles) == "28.09.2023.00.00") ##TEST !! CHANGE FOR REAL DATES ##careful with date format : periode 1 2023-10-01 00:00:00 and period 2 09.10.2023.23.45
+end=which(rownames(TR_profiles) == "17.10.2023.23.45") ##change pour la fin de manip ! 
+TR_trial_period=TR_profiles[start:end,] ###here, periode 2  middle of the experiment R_trial_period=TR_profiles
 
 
+##remove irrigation dates
+
+ ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
+start_irr_day=which(rownames(TR_trial_period) == "29.09.2023.00.00")
+end_irr_day=which(rownames(TR_trial_period) == "29.09.2023.23.45")
+TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
+
+
+
+ ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
+start_irr_day=which(rownames(TR_trial_period) == "03.10.2023.00.00")
+end_irr_day=which(rownames(TR_trial_period) == "03.10.2023.23.45")
+TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
+
+
+
+
+ ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
+start_irr_day=which(rownames(TR_trial_period) == "06.10.2023.00.00")
+end_irr_day=which(rownames(TR_trial_period) == "06.10.2023.23.45")
+TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
+
+
+
+ ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
+start_irr_day=which(rownames(TR_trial_period) == "10.10.2023.00.00")
+end_irr_day=which(rownames(TR_trial_period) == "10.10.2023.23.45")
+TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
+
+
+
+
+ ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
+start_irr_day=which(rownames(TR_trial_period) == "13.10.2023.00.00")
+end_irr_day=which(rownames(TR_trial_period) == "13.10.2023.23.45")
+TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
+
+
+##test i=1
+##change character to numeric
+char_columns <- sapply(TR_trial_period, is.character)             # Identify character columns
+data_chars_as_num <- TR_trial_period                              # Replicate data
+data_chars_as_num[ , char_columns] <- as.data.frame(   # Recode characters as numeric
+  apply(data_chars_as_num[ , char_columns], 2, as.numeric))
+sapply(data_chars_as_num, class)  
+TR_trial_period=data_chars_as_num
 
 
 ##TR profil by plot 
-for ( i in 1:ncol(TR_profiles)) { 
-  subset_geno_trt <- data.frame(TR_profiles[i], timeline, colnames(TR_profiles[i]) )
+for ( i in 1:ncol(TR_trial_period)) { 
+  subset_geno_trt <- data.frame(TR_trial_period[i], rownames(TR_trial_period), colnames(TR_trial_period[i]))
   colnames(subset_geno_trt)=c("TR", "Timestamp","Geno_Trt")
-  #subset_geno_trt$Exp60_125_IS15752_WW_R1<-as.numeric( subset_geno_trt$Exp60_125_IS15752_WW_R1)
-  #subset_geno_trt$timeline<-ymd_hms( subset_geno_trt$timeline)
-
-  
-  for (j in 1:nrow(subset_geno_trt)) {
-    if (isTRUE(subset_geno_trt[j,1] > 1)){
-  subset_geno_trt[j,1]=NA
-    }
-    print(j)
-    j=j+1
-  }
+  subset_geno_trt$Timestamp<-dmy_hm(subset_geno_trt$Timestamp)
+# 
+#   for (j in 1:nrow(subset_geno_trt)) {
+#     if (isTRUE(subset_geno_trt[j,1] > 1) ||  (isTRUE(subset_geno_trt[j,1] < -1))){
+#   subset_geno_trt[j,1]=NA
+#     }
+#     print(j)
+#     j=j+1
+#   }
 
   png(file = paste("Transpiration rate Geno_Trt",subset_geno_trt$Geno_Trt[1],".png"))
   
@@ -153,18 +206,20 @@ for ( i in 1:ncol(TR_profiles)) {
 
 }
 
+g=geno_info$Geno_Trt
+g_t=g[1]
 #select all columns that contain "genotype name" 
-subset_geno = TR_profiles[,grepl("Exp60_126_IS16044",names(TR_profiles))]
+subset_geno = TR_profiles[,grepl(g_t,names(TR_profiles))]
 subset_geno = cbind (subset_geno, timeline)
 subset_geno <- melt(subset_geno ,  id.vars = 'timeline', variable.name = 'rep')
 
- for (j in 1:nrow(subset_geno)) {
-    if (isTRUE(subset_geno[j,3] > 1)){
-  subset_geno[j,3]=NA
-    }
-    print(j)
-    j=j+1
-  }
+ # for (j in 1:nrow(subset_geno)) {
+ #    if (isTRUE(subset_geno[j,3] > 1)){
+ #  subset_geno[j,3]=NA
+ #    }
+ #    print(j)
+ #    j=j+1
+ #  }
 
 x=subset_geno$timeline
 y=subset_geno$value
@@ -206,9 +261,8 @@ Do we have outlier in TR profils?
 ```{r Load features smoothed data }
 ##### Load features smoothed data on trial period : 
 ##DO NOT LOAD IRRIGATION DATES
-features_d1<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-09-27.csv")
-features_d2<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-09-28.csv")
-features_d3<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-09-29.csv")
+features_d2<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE1/smthTR_FeaturesTimeSeries/D.2023-09-28.csv")
+features_d3<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE1/smthTR_FeaturesTimeSeries/D.2023-09-29.csv")
 features_d4<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-09-30.csv")
 features_d5<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-01.csv") 
 features_d6<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-02.csv") 
@@ -230,44 +284,106 @@ features_d21<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2
 features_d22<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-18.csv") 
 
 ###ADD DATE ON EACH FEATURE BEFORE BINDING
+colnames(features_d2)=c( "X","unit", "old_unit","Treatment","Genotype", "G..Alias", "Replicates", "MAXET-2023-09-28" ,"slope.maxET.6-2023-09-28", "slope.07.maxET-2023-09-28","slope.00.07-2023-09-28", "slope.19.23.45-2023-09-28", "curvmaxET-2023-09-28","total.auc-2023-09-28","auc.10.15-2023-09-28" , "sd.10.15-2023-09-28","auc.prop.10.15-2023-09-28", "auc.07.19-2023-09-28", "sd.07.19-2023-09-28",   "auc.prop.07.19-2023-09-28", "auc.night-2023-09-28","cos.sim.index-2023-09-28")
 
 
+colnames(features_d3)=c( "X","unit", "old_unit","Treatment","Genotype", "G..Alias", "Replicates", "MAXET-2023-09-28" ,"slope.maxET.6-2023-09-28", "slope.07.maxET-2023-09-28","slope.00.07-2023-09-28", "slope.19.23.45-2023-09-28", "curvmaxET-2023-09-28","total.auc-2023-09-28","auc.10.15-2023-09-28" , "sd.10.15-2023-09-28","auc.prop.10.15-2023-09-28", "auc.07.19-2023-09-28", "sd.07.19-2023-09-28",   "auc.prop.07.19-2023-09-28", "auc.night-2023-09-28","cos.sim.index-2023-09-28")
 
 ###BIND ALL DATES 
+features<-cbind(features_d2, features_d3)
+#features<-cbind(features_d1, features_d2, features_d3, features_d4, features_d5, features_d6, features_d7, features_d8, features_d9, features_d10, features_d11, features_d12, features_d13, features_d14, features_d15, features_d16, features_d17, features_d18, features_d19, features_d20, features_d21, features_d22 °
 
-features<-cbind(features_d1, features_d2, features_d3, features_d4, features_d5, features_d6, features_d7, features_d8, features_d9, features_d10, features_d11, features_d12, features_d13, features_d14, features_d15, features_d16, features_d17, features_d18, features_d19, features_d20, features_d21, features_d22 °
-
-                
+features$Geno_Trt<-paste(features$Genotype, "|", features$Treatment)   
 ## KEEP ONE TIME : unit	old_unit	Treatment	Genotype	G..Alias	Replicates
 
-# CREATE DATAFRAME FOR EACH FEATURE,ONE COLOMN PER DATE 
 
-maxET = features[,grepl("maxET", names(features))]
-slope-maxET=features[,grepl("slope.maxET-6",names(features))]
-slope-seven-maxET=features[,grepl("slope.maxET-6",names(features))]
-slope-zero-seven = features[,grepl("slope.00-07",names(features))]
-slope-nineteen-midnight = features[,grepl("slope.19-23:45",names(features))]
-curvmaxET = features[,grepl("curvmaxET",names(features))]
-total.auc = features[,grepl("total.auc",names(features))]
-auc-ten-fifteen = features[,grepl("auc.10-15",names(features))]
-sd-ten-fifteen = features[,grepl("sd.10-15",names(features))]
-auc-prop-ten-fifteen = features[,grepl("auc.prop.10-15",names(features))]
-auc-seven-nineteen = features[,grepl("auc.07-19",names(features))]
-sd-seven-nineteen = features[,grepl("sd.07-19",names(features))]
-auc-prop-seven-nineteen = features[,grepl("auc.prop.07-19",names(features))]
-auc-night= features[,grepl("auc.night",names(features))]
+slope.seven.maxET=features[,grepl("slope.07.maxET",names(features))]
+slope.zero.seven = features[,grepl("slope.00.07",names(features))]
+slope.nineteen.midnight = features[,grepl("slope.19.23.45",names(features))]
+curvmaxET = features[,grepl("curvmaxET",names(features))]                  
+total.auc = features[,grepl("total.auc",names(features))]                  
+auc.ten.fifteen = features[,grepl("auc.10.15",names(features))]
+sd.ten.fifteen = features[,grepl("sd.10.15",names(features))]
+auc.prop.ten.fifteen = features[,grepl("auc.prop.10.15",names(features))]
+auc.seven.nineteen = features[,grepl("auc.07.19",names(features))]
+sd.seven.nineteen = features[,grepl("sd.07.19",names(features))]
+auc.prop.seven.nineteen = features[,grepl("auc.prop.07.19",names(features))]
+auc.night= features[,grepl("auc.night",names(features))]
 cos.sim.index= features[,grepl("cos.sim.index",names(features))]
+```
 
+
+```{r MaxET data }
+# CREATE DATAFRAME FOR EACH FEATURE,ONE COLOMN PER DATE 
+maxET = features[,grepl("MAXET", names(features))] 
 
 ###put feature on same column
-maxET <- melt(maxET ,  id.vars = 'genotype?', variable.name = 'rep')
+maxET= cbind(maxET, features$Geno_Trt, features$Genotype, features$Treatment)
 
-
-###anova 
-
-Anova ( mod = value ~ genotype, maxET  )	
-H2
+maxET <- melt(maxET ,  id.vars = "features$Geno_Trt", variable.name = 'rep')
+maxET$value<-as.numeric(maxET$value)
+maxET= na.omit(maxET)
+colnames(maxET)=c( "Geno_Trt", "Date", "value")            
+maxET = separate_wider_delim(maxET, cols = Geno_Trt, delim = "|", names = c("Geno", "Trt"))
+colnames(maxET)=c("Genotype", "Treatment","Date", "maxET")
 ```
+
+
+```{r anova maxET data }
+model=lm(maxET~Genotype, data = maxET)
+aov<-Anova(model)
+print(aov)
+
+#Response: value
+#              Sum Sq   Df F value    Pr(>F)    
+#Genotype  5.3670e+14  312  2.1303 < 2.2e-16 ***
+#Residuals 9.5039e+14 1177                      
+```
+
+
+```{r H2 maxET }
+H2=(aov$`Sum Sq`[1]/(aov$`Sum Sq`[1]+aov$`Sum Sq`[2]))
+H2
+
+```
+
+
+
+
+```{r SLOPE_MAXET data }
+# CREATE DATAFRAME FOR EACH FEATURE,ONE COLOMN PER DATE 
+maxET = features[,grepl("MAXET", names(features))] 
+
+###put feature on same column
+maxET= cbind(maxET, features$Geno_Trt, features$Genotype, features$Treatment)
+
+maxET <- melt(maxET ,  id.vars = "features$Geno_Trt", variable.name = 'rep')
+maxET$value<-as.numeric(maxET$value)
+maxET= na.omit(maxET)
+colnames(maxET)=c( "Geno_Trt", "Date", "value")            
+maxET = separate_wider_delim(maxET, cols = Geno_Trt, delim = "|", names = c("Geno", "Trt"))
+colnames(maxET)=c("Genotype", "Treatment","Date", "maxET")
+```
+
+
+```{r anova maxET data }
+model=lm(value~Genotype, data = maxET)
+aov<-Anova(model)
+print(aov)
+
+#Response: value
+#              Sum Sq   Df F value    Pr(>F)    
+#Genotype  5.3670e+14  312  2.1303 < 2.2e-16 ***
+#Residuals 9.5039e+14 1177                      
+```
+
+
+```{r H2 maxET }
+H2=(aov$`Sum Sq`[1]/(aov$`Sum Sq`[1]+aov$`Sum Sq`[2]))
+H2
+
+```
+
 
 
 ```{r}
