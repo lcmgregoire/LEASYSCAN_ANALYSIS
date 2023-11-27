@@ -26,8 +26,8 @@ library("dplyr")
 library("reshape2")
 
 getwd()
-setwd(dir = "C:/Users/2021lg003/Documents/LEASYSCAN_EXP_INDE_2023/RESULTS/3-AFTER_SMOOTHING")
-
+setwd(dir = "C:/Users/2021lg003/Documents/LEASYSCAN_EXP_INDE_2023/RESULTS/3-AFTER_SMOOTHING/")
+path="C:/Users/2021lg003/Documents/LEASYSCAN_EXP_INDE_2023/RESULTS/3-AFTER_SMOOTHING/"
 ```
 
 
@@ -73,7 +73,7 @@ climate_df=na.omit(climate_df)
   png(file = "VPD_plot.png")
   ggplot(climate_df, aes(x=Timestamp, y=VPD))+
     geom_point() +
-    labs(title = "VPD measured during experiment") + ylab("VPD (kPa)") + xlab("Date") +
+    labs(title = "VPD measured") + ylab("VPD (kPa)") + xlab("Date") +
     ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
     theme(axis.text.x=element_text(angle = -45, hjust = 0))+
     geom_line()
@@ -83,7 +83,7 @@ climate_df=na.omit(climate_df)
     png(file = "ETref_plot.png")
   ggplot(climate_df, aes(x=Timestamp, y=ETref))+
     geom_point() +
-    labs(title = "ETref measured during experiment") + ylab("ETref (mm.day-1)") + xlab("Date") +
+    labs(title = "ETref measured ") + ylab("ETref ((mm 15.min−1)") + xlab("Date") +
     ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
     theme(axis.text.x=element_text(angle = -45, hjust = 0))+
     geom_line()
@@ -94,9 +94,7 @@ climate_df=na.omit(climate_df)
 
 
 
-```{r TR plot}
-
-
+```{r TRIAL PERIOD AND REMOVE IRRGATION DATES}
 ######### TR 
 TR_profiles<-as.data.frame(t(inputfile_TR))
 TR_profiles<-TR_profiles[-c(1:8)] ### remove climate data (first column)
@@ -122,16 +120,56 @@ TR_profiles <- TR_profiles[, !duplicated(colnames(TR_profiles))]
 
 ##only trial period
 start=which(rownames(TR_profiles) == "28.09.2023.00.00") ##TEST !! CHANGE FOR REAL DATES ##careful with date format : periode 1 2023-10-01 00:00:00 and period 2 09.10.2023.23.45
-end=which(rownames(TR_profiles) == "17.10.2023.23.45") ##change pour la fin de manip ! 
+end=which(rownames(TR_profiles) == "16.10.2023.23.45") ##change pour la fin de manip ! 
 TR_trial_period=TR_profiles[start:end,] ###here, periode 2  middle of the experiment R_trial_period=TR_profiles
+```
 
 
+
+```{r TR TRIAL PERIOD}
+
+##TR profil by plot 
+for ( i in 1:ncol(TR_trial_period)) { 
+  subset_geno_trt <- data.frame(TR_trial_period[i], rownames(TR_trial_period),colnames(TR_trial_period[i]))
+  colnames(subset_geno_trt)=c("TR", "Timestamp","Geno_Trt")
+  subset_geno_trt$Timestamp<-dmy_hm(subset_geno_trt$Timestamp)
+
+
+  png(file = paste(path,"Transpiration rate Geno_Trt",subset_geno_trt$Geno_Trt[1],".png"))
+  
+  plot<-
+    ggplot(data = subset_geno_trt, aes(subset_geno_trt$Timestamp,subset_geno_trt$TR))   +
+    ylab("TR (mm m−2 15 min−1)")+
+    xlab("Date ")+
+    labs(title = subset_geno_trt$Geno_Trt[1])  +
+    geom_point()+
+    geom_line()   +
+    ggplot2::scale_x_datetime(labels = scales::date_format(format = "%d-%m"), date_breaks = "1 days")+
+    theme(axis.text.x=element_text(angle = -45, hjust = 0))
+  
+  print(plot)
+  dev.off()
+  print(i)
+
+}
+
+```
+
+
+```{r TRIAL PERIOD AND REMOVE IRRGATION DATES}
 ##remove irrigation dates
 
  ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
-start_irr_day=which(rownames(TR_trial_period) == "29.09.2023.00.00")
-end_irr_day=which(rownames(TR_trial_period) == "29.09.2023.23.45")
+start_irr_day=which(rownames(TR_trial_period) == "30.09.2023.00.00")
+end_irr_day=which(rownames(TR_trial_period) == "30.09.2023.23.45")
 TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
+
+
+ ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
+start_irr_day=which(rownames(TR_trial_period) == "01.10.2023.00.00")
+end_irr_day=which(rownames(TR_trial_period) == "01.10.2023.23.45")
+TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
+
 
 
 
@@ -149,21 +187,18 @@ end_irr_day=which(rownames(TR_trial_period) == "06.10.2023.23.45")
 TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
 
 
-
- ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
-start_irr_day=which(rownames(TR_trial_period) == "10.10.2023.00.00")
-end_irr_day=which(rownames(TR_trial_period) == "10.10.2023.23.45")
-TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
-
-
-
+#  ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
+# start_irr_day=which(rownames(TR_trial_period) == "10.10.2023.00.00")
+# end_irr_day=which(rownames(TR_trial_period) == "10.10.2023.23.45")
+# TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
 
  ##TEST CHANGE POUR LES VRAIES DATES D'IRRIGATION
 start_irr_day=which(rownames(TR_trial_period) == "13.10.2023.00.00")
 end_irr_day=which(rownames(TR_trial_period) == "13.10.2023.23.45")
 TR_trial_period=TR_trial_period[-c(start_irr_day:end_irr_day),]
+```
 
-
+```{r TR plot}
 ##test i=1
 ##change character to numeric
 char_columns <- sapply(TR_trial_period, is.character)             # Identify character columns
@@ -176,23 +211,16 @@ TR_trial_period=data_chars_as_num
 
 ##TR profil by plot 
 for ( i in 1:ncol(TR_trial_period)) { 
-  subset_geno_trt <- data.frame(TR_trial_period[i], rownames(TR_trial_period), colnames(TR_trial_period[i]))
+  subset_geno_trt <- data.frame(TR_trial_period[i], rownames(TR_trial_period),colnames(TR_trial_period[i]))
   colnames(subset_geno_trt)=c("TR", "Timestamp","Geno_Trt")
   subset_geno_trt$Timestamp<-dmy_hm(subset_geno_trt$Timestamp)
-# 
-#   for (j in 1:nrow(subset_geno_trt)) {
-#     if (isTRUE(subset_geno_trt[j,1] > 1) ||  (isTRUE(subset_geno_trt[j,1] < -1))){
-#   subset_geno_trt[j,1]=NA
-#     }
-#     print(j)
-#     j=j+1
-#   }
 
-  png(file = paste("Transpiration rate Geno_Trt",subset_geno_trt$Geno_Trt[1],".png"))
+
+  png(file = paste(path,"Transpiration rate Geno_Trt",subset_geno_trt$Geno_Trt[1],".png"))
   
   plot<-
     ggplot(data = subset_geno_trt, aes(subset_geno_trt$Timestamp,subset_geno_trt$TR))   +
-    ylab("Transpiration (mm.day.mm²) ")+
+    ylab("TR (mm m−2 15 min−1)")+
     xlab("Date ")+
     labs(title = subset_geno_trt$Geno_Trt[1])  +
     geom_point()+
@@ -206,12 +234,15 @@ for ( i in 1:ncol(TR_trial_period)) {
 
 }
 
-g=geno_info$Geno_Trt
-g_t=g[1]
+g=geno_info$Genotype
+g[1]
 #select all columns that contain "genotype name" 
-subset_geno = TR_profiles[,grepl(g_t,names(TR_profiles))]
-subset_geno = cbind (subset_geno, timeline)
+subset_geno=TR_trial_period[,c(  colnames(TR_trial_period)[grep(g[1],colnames(TR_trial_period))]
++ )]
+subset_geno=cbind(subset_geno, rownames(subset_geno))
+subset_geno$
 subset_geno <- melt(subset_geno ,  id.vars = 'timeline', variable.name = 'rep')
+subset_geno = cbind (subset_geno, timeline)
 
  # for (j in 1:nrow(subset_geno)) {
  #    if (isTRUE(subset_geno[j,3] > 1)){
@@ -261,61 +292,72 @@ Do we have outlier in TR profils?
 ```{r Load features smoothed data }
 ##### Load features smoothed data on trial period : 
 ##DO NOT LOAD IRRIGATION DATES
-features_d2<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE1/smthTR_FeaturesTimeSeries/D.2023-09-28.csv")
-features_d3<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE1/smthTR_FeaturesTimeSeries/D.2023-09-29.csv")
-features_d4<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-09-30.csv")
-features_d5<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-01.csv") 
-features_d6<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-02.csv") 
-features_d7<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-03.csv") 
-features_d8<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-04.csv") 
-features_d9<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-05.csv") 
-features_d10<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-06.csv") 
-features_d11<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-07.csv") 
-features_d12<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-08.csv") 
-features_d13<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-09.csv") 
-features_d14<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-10.csv") 
-features_d15<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-11.csv") 
-features_d16<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-12.csv") 
-features_d17<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-13.csv") 
-features_d18<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-14.csv") 
-features_d19<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-15.csv") 
-features_d20<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-16.csv") 
-features_d21<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-17.csv") 
-features_d22<-read.csv("./2-DATA_SMOOTHING/results/smthTR_FeaturesTimeSeries/D.2023-10-18.csv") 
+features_d1<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE1/smthTR_FeaturesTimeSeries/D.2023-09-28.csv", sep = ";")
+
+features_d2<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE1/smthTR_FeaturesTimeSeries/D.2023-09-29.csv", sep = ";")
+
+#features_d3<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-09-30.csv") 
+#features_d4<-read.csv("./2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-01.csv") #
+features_d5<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-02.csv") 
+features_d6<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-03.csv") 
+features_d7<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-04.csv") 
+features_d8<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-05.csv") 
+features_d9<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-06.csv") 
+features_d10<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-07.csv") 
+features_d11<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-08.csv") 
+features_d12<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-09.csv") 
+features_d13<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE2/smthTR_FeaturesTimeSeries/D.2023-10-10.csv") 
+features_d14<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE3/smthTR_FeaturesTimeSeries/D.2023-10-11.csv") 
+features_d15<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE3/smthTR_FeaturesTimeSeries/D.2023-10-12.csv") 
+features_d16<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE3/smthTR_FeaturesTimeSeries/D.2023-10-13.csv") 
+features_d17<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE3/smthTR_FeaturesTimeSeries/D.2023-10-14.csv") 
+features_d18<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE3/smthTR_FeaturesTimeSeries/D.2023-10-15.csv") 
+features_d19<-read.csv("C:/Users/2021lg003/Documents/LEASYSCAN_ANALYSIS/2-DATA_SMOOTHING/results/PERIODE3/smthTR_FeaturesTimeSeries/D.2023-10-16.csv") 
+
+
+##rename maxET in MAXET BEFORE BINDING
+library("dplyr")
+#Using rename()
+features_d1 <- features_d1 %>% 
+       rename("MAXET" = "maxET")
+features_d2 <- features_d2 %>% 
+       rename("MAXET" = "maxET")
+
+
+
 
 ###ADD DATE ON EACH FEATURE BEFORE BINDING
-colnames(features_d2)=c( "X","unit", "old_unit","Treatment","Genotype", "G..Alias", "Replicates", "MAXET-2023-09-28" ,"slope.maxET.6-2023-09-28", "slope.07.maxET-2023-09-28","slope.00.07-2023-09-28", "slope.19.23.45-2023-09-28", "curvmaxET-2023-09-28","total.auc-2023-09-28","auc.10.15-2023-09-28" , "sd.10.15-2023-09-28","auc.prop.10.15-2023-09-28", "auc.07.19-2023-09-28", "sd.07.19-2023-09-28",   "auc.prop.07.19-2023-09-28", "auc.night-2023-09-28","cos.sim.index-2023-09-28")
+colnames(features_d1)[8:ncol(features_d1)] <- paste(colnames(features_d1)[8:ncol(features_d1)], '_2023-09-28', sep='_')
+colnames(features_d2)[8:ncol(features_d2)] <- paste(colnames(features_d2)[8:ncol(features_d2)], '_2023-09-29', sep='_')
 
 
-colnames(features_d3)=c( "X","unit", "old_unit","Treatment","Genotype", "G..Alias", "Replicates", "MAXET-2023-09-28" ,"slope.maxET.6-2023-09-28", "slope.07.maxET-2023-09-28","slope.00.07-2023-09-28", "slope.19.23.45-2023-09-28", "curvmaxET-2023-09-28","total.auc-2023-09-28","auc.10.15-2023-09-28" , "sd.10.15-2023-09-28","auc.prop.10.15-2023-09-28", "auc.07.19-2023-09-28", "sd.07.19-2023-09-28",   "auc.prop.07.19-2023-09-28", "auc.night-2023-09-28","cos.sim.index-2023-09-28")
+features=cbind(features_d1,features_d2 )
 
-###BIND ALL DATES 
-features<-cbind(features_d2, features_d3)
-#features<-cbind(features_d1, features_d2, features_d3, features_d4, features_d5, features_d6, features_d7, features_d8, features_d9, features_d10, features_d11, features_d12, features_d13, features_d14, features_d15, features_d16, features_d17, features_d18, features_d19, features_d20, features_d21, features_d22 °
+
 
 features$Geno_Trt<-paste(features$Genotype, "|", features$Treatment)   
 ## KEEP ONE TIME : unit	old_unit	Treatment	Genotype	G..Alias	Replicates
 
+MAXET=features[,grepl("MAXET",names(features))] ##probleme : on recupere les features maxET mais aussi slope.maxET,  slope.07.maxET, , curvmaxET .... :( Change before maxET to MAXET!
 
-slope.seven.maxET=features[,grepl("slope.07.maxET",names(features))]
-slope.zero.seven = features[,grepl("slope.00.07",names(features))]
-slope.nineteen.midnight = features[,grepl("slope.19.23.45",names(features))]
-curvmaxET = features[,grepl("curvmaxET",names(features))]                  
-total.auc = features[,grepl("total.auc",names(features))]                  
-auc.ten.fifteen = features[,grepl("auc.10.15",names(features))]
-sd.ten.fifteen = features[,grepl("sd.10.15",names(features))]
-auc.prop.ten.fifteen = features[,grepl("auc.prop.10.15",names(features))]
-auc.seven.nineteen = features[,grepl("auc.07.19",names(features))]
-sd.seven.nineteen = features[,grepl("sd.07.19",names(features))]
-auc.prop.seven.nineteen = features[,grepl("auc.prop.07.19",names(features))]
-auc.night= features[,grepl("auc.night",names(features))]
-cos.sim.index= features[,grepl("cos.sim.index",names(features))]
+slope.seven.maxET=features[,grepl("slope.07.maxET",names(features))]         ##ok
+slope.zero.seven = features[,grepl("slope.00.07",names(features))]             ##ok
+slope.nineteen.midnight = features[,grepl("slope.19.23.45",names(features))] ##ok
+curvmaxET = features[,grepl("curvmaxET",names(features))]                  ##ok    
+total.auc = features[,grepl("total.auc",names(features))]                   ##ok
+auc.ten.fifteen = features[,grepl("auc.10.15",names(features))]             ##ok
+sd.ten.fifteen = features[,grepl("sd.10.15",names(features))]                  ##ok
+auc.prop.ten.fifteen = features[,grepl("auc.prop.10.15",names(features))]    ##ok
+auc.seven.nineteen = features[,grepl("auc.07.19",names(features))]           ##ok
+sd.seven.nineteen = features[,grepl("sd.07.19",names(features))]              ##ok
+auc.prop.seven.nineteen = features[,grepl("auc.prop.07.19",names(features))]   ##ok
+auc.night= features[,grepl("auc.night",names(features))]                         ##ok
+cos.sim.index= features[,grepl("cos.sim.index",names(features))]                 ##ok
 ```
 
 
 ```{r MaxET data }
-# CREATE DATAFRAME FOR EACH FEATURE,ONE COLOMN PER DATE 
-maxET = features[,grepl("MAXET", names(features))] 
+
 
 ###put feature on same column
 maxET= cbind(maxET, features$Geno_Trt, features$Genotype, features$Treatment)
