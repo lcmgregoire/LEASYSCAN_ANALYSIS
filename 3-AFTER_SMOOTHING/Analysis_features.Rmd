@@ -466,8 +466,8 @@ features_d1 <- features_d1 %>%
        rename("MAXET" = "maxET")
 features_d2 <- features_d2 %>% 
        rename("MAXET" = "maxET")
-features_d5 <- features_d5 %>% 
-       rename("MAXET" = "maxET")
+# features_d5 <- features_d5 %>% 
+#        rename("MAXET" = "maxET")
 features_d6 <- features_d6 %>% 
        rename("MAXET" = "maxET")
 features_d7 <- features_d7 %>% 
@@ -578,18 +578,34 @@ MAXET$Date<-gsub("MAXET_","",as.character(MAXET$Date))##remove MAXET before date
 MAXET$Date=lubridate::ymd(MAXET$Date)
  MAXET = separate_wider_delim(MAXET , cols = Geno_Trt, delim = "|", names = c("Geno", "Trt"))
  colnames(MAXET)=c("Genotype", "Treatment","Date", "maxET")
+ 
+ MAXET$Genotype=as.factor(MAXET$Genotype)
+ uniq_date=unique(MAXET$Date)
+ 
+
+ 
 ```
 
 
 ```{r 1 anova maxET data }
+
+ for (d in 1:length(uniq_date)) {
+   
+   subset_feat= MAXET[MAXET$Date == uniq_date[d],]### pick a day 
+
+   model=lm(maxET~Genotype, data = subset_feat)
+  aov<-Anova(model)
+  print(aov)
+   H2=(aov$`Sum Sq`[1]/(aov$`Sum Sq`[1]+aov$`Sum Sq`[2]))
+  print(H2)
+   print(d)
+   
+ }
+
+
 model=lm(maxET~Genotype, data = MAXET)
 aov<-Anova(model)
 print(aov)
-
-# Response: maxET
-#               Sum Sq    Df F value    Pr(>F)    
-# Genotype  3.2229e+14   313  4.0021 < 2.2e-16 ***
-# Residuals 3.1905e+15 12401                    
 ```
 
 
